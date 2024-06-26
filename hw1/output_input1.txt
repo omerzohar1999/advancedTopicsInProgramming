@@ -1,0 +1,15 @@
+East
+Stay
+Stay
+Stay
+Stay
+Stay
+West
+Stay
+Stay
+Stay
+Stay
+Number of steps: 11
+Dirt left: 0
+Vaccum cleaner is not dead
+Mission ended successfuly
