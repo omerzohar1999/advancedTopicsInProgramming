@@ -5,7 +5,7 @@
 #include "House.h"
 
 class Sensor {
-  House *house;
+  const House *house;
 
 public:
   Sensor(House *house);

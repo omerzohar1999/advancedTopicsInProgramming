@@ -183,8 +183,7 @@ North
 North
 West
 West
-
-Number of steps: 186
+Number of steps: 185
 Dirt left: 0
 Vaccum cleaner is not dead
 Mission ended successfuly

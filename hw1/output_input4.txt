@@ -12,8 +12,7 @@ West
 Stay
 Stay
 Stay
-Stay
-Number of steps: 15
+Number of steps: 14
 Dirt left: 0
 Vaccum cleaner is not dead
 Mission ended successfuly

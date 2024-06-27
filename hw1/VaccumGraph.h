@@ -3,6 +3,7 @@
 
 #include "Direction.h"
 #include <functional>
+#include <map>
 #include <queue>
 #include <vector>
 
@@ -33,10 +34,11 @@ public:
 };
 
 class VaccumGraph {
-  std::vector<VaccumGraphCell *> cells;
+  std::unordered_map<int, std::unordered_map<int, VaccumGraphCell *>> cells;
   VaccumGraphCell *current;
   bool finishedScanning = false;
   bool finishedCleaning = false;
+  int num_cells = 0;
 
 public:
   VaccumGraph();
@@ -68,6 +70,8 @@ public:
   void decreaseDirt();
 
   void updateCurrent(direction dir);
+
+  void addCell(VaccumGraphCell *cell);
 
   int getCurrentI() const;
   int getCurrentJ() const;

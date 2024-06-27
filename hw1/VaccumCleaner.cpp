@@ -5,7 +5,6 @@
 #include <iostream>
 
 u_int32_t VaccumCleaner::getBatteryStepsLeft() {
-  std::cout << "a" << std::endl;
   return sensor->getBatteryStepsLeft();
 }
 bool VaccumCleaner::isThereWall(direction dir) {
@@ -13,10 +12,7 @@ bool VaccumCleaner::isThereWall(direction dir) {
   bool ret = sensor->isThereWall(dir);
   return ret;
 }
-int VaccumCleaner::howMuchDirtHere() {
-  std::cout << "b" << std::endl;
-  return sensor->howMuchDirtHere();
-}
+int VaccumCleaner::howMuchDirtHere() { return sensor->howMuchDirtHere(); }
 
 VaccumCleaner::VaccumCleaner(u_int32_t battery_max_size, Sensor *sensor) {
   this->battery_max_size = battery_max_size;

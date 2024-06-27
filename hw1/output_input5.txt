@@ -149,7 +149,45 @@ Stay
 South
 West
 Stay
-Number of steps: 151
-Dirt left: 17
+South
+Stay
+Stay
+East
+Stay
+West
+South
+East
+Stay
+Stay
+Stay
+Stay
+South
+West
+Stay
+West
+Stay
+Stay
+North
+Stay
+North
+North
+West
+Stay
+Stay
+Stay
+East
+North
+West
+Stay
+Stay
+East
+North
+North
+North
+North
+West
+North
+Number of steps: 189
+Dirt left: 0
 Vaccum cleaner is not dead
 Mission ended not successfuly
