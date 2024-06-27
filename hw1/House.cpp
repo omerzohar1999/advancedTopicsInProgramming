@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "Direction.h"
 #include "House.h"
@@ -263,7 +264,7 @@ int House::howMuchDirtHere() const {
   return cells[robot_loc_i][robot_loc_j]->getDirtLevel();
 }
 
-int House::getBatteryLeft() const { return floor(battery_current_size); }
+int House::getBatteryLeft() const { return std::floor(battery_current_size); }
 int House::getDirtLeft() const {
   int ret = 0;
   for (u_int32_t row = 0; row < house_size_rows; row++) {
