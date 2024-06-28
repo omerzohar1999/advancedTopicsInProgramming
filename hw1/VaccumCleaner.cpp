@@ -8,7 +8,7 @@ u_int32_t VaccumCleaner::getBatteryStepsLeft() {
   return sensor->getBatteryStepsLeft();
 }
 bool VaccumCleaner::isThereWall(direction dir) {
-  std::cout << directionString(dir) << std::endl;
+//  std::cout << directionString(dir) << std::endl;
   bool ret = sensor->isThereWall(dir);
   return ret;
 }
@@ -35,11 +35,11 @@ direction VaccumCleaner::getStep() {
     return ret;
   }
   if (!(houseGraph->houseWasFullyExplored())) {
-    std::cout << "ROBOPOV: going to explore house" << std::endl;
+//    std::cout << "ROBOPOV: going to explore house" << std::endl;
     direction ret = houseGraph->dirForUnvisited();
-    std::cout << "ROBOPOV: made decision " << directionString(ret) << std::endl;
+//    std::cout << "ROBOPOV: made decision " << directionString(ret) << std::endl;
     this->houseGraph->updateCurrent(ret);
-    std::cout << "ROBOPOV: updated internal graph" << std::endl;
+//    std::cout << "ROBOPOV: updated internal graph" << std::endl;
     if (ret != NOT_EXISTS)
       return ret;
   }

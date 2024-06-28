@@ -258,9 +258,9 @@ bool House::isThereWall(direction dir) const {
 }
 
 int House::howMuchDirtHere() const {
-  std::cout << "(" << robot_loc_i << "," << robot_loc_j << ")" << std::endl;
-  std::cout << cells[robot_loc_i][robot_loc_j] << std::endl;
-  std::cout << cells[robot_loc_i][robot_loc_j]->getDirtLevel() << std::endl;
+//  std::cout << "(" << robot_loc_i << "," << robot_loc_j << ")" << std::endl;
+//  std::cout << cells[robot_loc_i][robot_loc_j] << std::endl;
+//  std::cout << cells[robot_loc_i][robot_loc_j]->getDirtLevel() << std::endl;
   return cells[robot_loc_i][robot_loc_j]->getDirtLevel();
 }
 
@@ -317,7 +317,6 @@ void House::updateRobotLocation(direction decision) {
 
 bool House::changeState() {
   std::cout << "step no. " << stepsList.size() << std::endl;
-
   if (cleaningFinished()) {
     return true;
   }
