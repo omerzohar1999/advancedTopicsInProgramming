@@ -32,6 +32,8 @@ void VaccumGraphCell::decreaseDirt() {
     dirt--;
 }
 
+void VaccumGraphCell::setDirt(u_int8_t dirt) { this->dirt = dirt; }
+
 auto cellIsDockingCondition = [](const VaccumGraphCell *cell) {
   return cell->getIsDocking();
 };
@@ -55,7 +57,7 @@ void VaccumGraph::addCell(VaccumGraphCell *cell) {
 
 void VaccumGraph::visit(u_int8_t dirt, bool wallNorth, bool wallEast,
                         bool wallSouth, bool wallWest) {
-
+  current->setDirt(dirt);
   if (current->getWasVisited())
     return;
   int locI = current->getLocI();

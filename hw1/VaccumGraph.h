@@ -31,6 +31,7 @@ public:
   u_int32_t getID() const;
   VaccumGraphCell *getNeighborInDirection(direction dir);
   void decreaseDirt();
+  void setDirt(u_int8_t dirt);
 };
 
 class VaccumGraph {
@@ -51,28 +52,17 @@ public:
   direction
   bfsDirection(const std::function<bool(const VaccumGraphCell *)> &condition);
   int distanceFromDocking();
-
   direction dirForDocking();
-
   int distanceFromUnvisited();
-
   direction dirForUnvisited();
   int distanceFromDirty();
-
   direction dirForDirty();
-
   bool isInDocking();
-
   bool houseWasFullyExplored() const;
-
   bool houseWasFullyCleaned() const;
-
   void decreaseDirt();
-
   void updateCurrent(direction dir);
-
   void addCell(VaccumGraphCell *cell);
-
   int getCurrentI() const;
   int getCurrentJ() const;
 };
