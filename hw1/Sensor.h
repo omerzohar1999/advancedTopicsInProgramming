@@ -10,7 +10,7 @@ class Sensor {
 public:
   Sensor(House *house);
   u_int32_t getBatteryStepsLeft() const;
-  bool isThereWall(direction dir) const;
+  bool isThereWall(Direction dir) const;
   int howMuchDirtHere() const;
 };
 #endif

@@ -1,26 +1,15 @@
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
 #include <string>
 #include <vector>
-#include <cmath>
 
 #include "Direction.h"
 #include "House.h"
 #include "Sensor.h"
 #include "VaccumCleaner.h"
-
-HouseCell::HouseCell(u_int32_t row, u_int32_t col, bool north, bool east,
-                     bool south, bool west, u_int8_t dirt_level)
-    : location_rows(row), location_cols(col),
-      exists_wall{north, east, south, west}, dirt_level(dirt_level) {
-  if (dirt_level > 9) {
-    std::cerr << "invalid input: dirt_level above 9 for (" << row << "," << col
-              << ")" << std::endl;
-    exit(1);
-  }
-}
 
 HouseCell::HouseCell(std::string line) {
   u_int32_t row;
@@ -75,7 +64,7 @@ HouseCell::HouseCell(int x, int y, bool n, bool e, bool s, bool w)
 
 uint32_t HouseCell::getRow() const { return location_rows; }
 uint32_t HouseCell::getCol() const { return location_cols; }
-bool HouseCell::isWallInDirection(direction dir) const {
+bool HouseCell::isWallInDirection(Direction dir) const {
   if (dir > 3)
     return false;
   return exists_wall[dir];
@@ -85,7 +74,7 @@ void HouseCell::decreaseDirtLevel() {
   if (dirt_level > 0)
     dirt_level--;
 }
-void HouseCell::addWall(direction dir) { exists_wall[dir] = true; }
+void HouseCell::addWall(Direction dir) { exists_wall[dir] = true; }
 
 void HouseCell::printCell() const {
   std::cout << "(" << location_rows << "," << location_cols << ")n"
@@ -99,7 +88,8 @@ House::House(std::string file_name) {
   std::ifstream file(file_name);
   if (!file.is_open()) {
     std::cerr << "Unable to open file: " << file_name << std::endl;
-    exit(1);
+    error = true;
+    return;
   }
 
   std::string line;
@@ -160,10 +150,10 @@ House::House(std::string file_name) {
     cell = givenCells.at(i);
 
     if (cells[cell->getRow()][cell->getCol()] != nullptr) {
-      std::cout << "ERROR" << std::endl;
-      std::cout << "cell (" << cell->getRow() << "," << cell->getCol()
+      std::cerr << "ERROR: cell (" << cell->getRow() << "," << cell->getCol()
                 << ") was inserted twice" << std::endl;
-      exit(1);
+      error = true;
+      return;
     }
     cells[cell->getRow()][cell->getCol()] = cell;
   }
@@ -199,44 +189,48 @@ House::House(std::string file_name) {
         if (i > 0 && cells[i - 1][j] != nullptr &&
             cells[i][j]->isWallInDirection(NORTH) !=
                 cells[i - 1][j]->isWallInDirection(SOUTH)) {
-          std::cout << "consistency error:" << std::endl;
-          std::cout << "(" << i << "," << j << "), wallInNorth:"
+          std::cerr << "consistency error:" << std::endl;
+          std::cerr << "(" << i << "," << j << "), wallInNorth:"
                     << cells[i][j]->isWallInDirection(NORTH) << std::endl;
-          std::cout << "(" << i - 1 << "," << j << "), wallInSouth:"
+          std::cerr << "(" << i - 1 << "," << j << "), wallInSouth:"
                     << cells[i - 1][j]->isWallInDirection(SOUTH) << std::endl;
-          exit(1);
+          error = true;
+          return;
         }
         if (i < house_size_rows - 1 && cells[i + 1][j] != nullptr &&
             cells[i][j]->isWallInDirection(SOUTH) !=
                 cells[i + 1][j]->isWallInDirection(NORTH)) {
-          std::cout << "consistency error:" << std::endl;
-          std::cout << "(" << i << "," << j << "), wallInSouth:"
+          std::cerr << "consistency error:" << std::endl;
+          std::cerr << "(" << i << "," << j << "), wallInSouth:"
                     << cells[i][j]->isWallInDirection(SOUTH) << std::endl;
-          std::cout << "(" << i + 1 << "," << j << "), wallInNorth:"
+          std::cerr << "(" << i + 1 << "," << j << "), wallInNorth:"
                     << cells[i + 1][j]->isWallInDirection(NORTH) << std::endl;
-          exit(1);
+          error = true;
+          return;
         }
         if (j > 0 && cells[i][j - 1] != nullptr &&
             cells[i][j]->isWallInDirection(WEST) !=
                 cells[i][j - 1]->isWallInDirection(EAST)) {
-          std::cout << "consistency error:" << std::endl;
-          std::cout << "(" << i << "," << j
+          std::cerr << "consistency error:" << std::endl;
+          std::cerr << "(" << i << "," << j
                     << "), wallInWest:" << cells[i][j]->isWallInDirection(WEST)
                     << std::endl;
-          std::cout << "(" << i << "," << j - 1 << "), wallInEast:"
+          std::cerr << "(" << i << "," << j - 1 << "), wallInEast:"
                     << cells[i][j - 1]->isWallInDirection(EAST) << std::endl;
-          exit(1);
+          error = true;
+          return;
         }
         if (j < house_size_cols - 1 && cells[i][j + 1] != nullptr &&
             cells[i][j]->isWallInDirection(EAST) !=
                 cells[i][j + 1]->isWallInDirection(WEST)) {
-          std::cout << "consistency error:" << std::endl;
-          std::cout << "(" << i << "," << j
+          std::cerr << "consistency error:" << std::endl;
+          std::cerr << "(" << i << "," << j
                     << "), wallInEast:" << cells[i][j]->isWallInDirection(EAST)
                     << std::endl;
-          std::cout << "(" << i << "," << j + 1 << "), wallInWest:"
+          std::cerr << "(" << i << "," << j + 1 << "), wallInWest:"
                     << cells[i][j + 1]->isWallInDirection(WEST) << std::endl;
-          exit(1);
+          error = true;
+          return;
         }
       }
     }
@@ -252,15 +246,12 @@ House::House(std::string file_name) {
   std::cout << "finished building house from file" << std::endl;
 }
 
-bool House::isThereWall(direction dir) const {
+bool House::isThereWall(Direction dir) const {
   return this->cells[this->robot_loc_i][this->robot_loc_j]->isWallInDirection(
       dir);
 }
 
 int House::howMuchDirtHere() const {
-//  std::cout << "(" << robot_loc_i << "," << robot_loc_j << ")" << std::endl;
-//  std::cout << cells[robot_loc_i][robot_loc_j] << std::endl;
-//  std::cout << cells[robot_loc_i][robot_loc_j]->getDirtLevel() << std::endl;
   return cells[robot_loc_i][robot_loc_j]->getDirtLevel();
 }
 
@@ -291,89 +282,81 @@ bool House::isInDocking() const {
 
 bool House::cleaningFinished() const { return isInDocking() && !isDirtLeft(); }
 
-bool House::end(direction decision) const {
-  return cleaningFinished() ||
-         (!(isInDocking() && decision == STAY) && battery_current_size < 1) ||
+bool House::robotDied(Direction decision) const {
+  return !(isInDocking() && decision == STAY) && battery_current_size < 1;
+}
+
+bool House::end(Direction decision) const {
+  return cleaningFinished() || robotDied(decision) ||
          stepsList.size() > max_steps || decision == NOT_EXISTS;
 }
-void House::updateRobotLocation(direction decision) {
-  switch (decision) {
-  case NORTH:
-    robot_loc_i++;
-    break;
-  case EAST:
-    robot_loc_j--;
-    break;
-  case SOUTH:
-    robot_loc_i--;
-    break;
-  case WEST:
-    robot_loc_j++;
-    break;
-  default:
-    break;
+
+void House::updateRobotLocation(Direction decision) {
+  robot_loc_i = locIByDirection(robot_loc_i, decision);
+  robot_loc_j = locJByDirection(robot_loc_j, decision);
+}
+
+void House::updateRobotBattery(Direction decision) {
+  if (isInDocking() && decision == STAY) {
+    battery_current_size += ((float)battery_max_size / 20);
+  } else {
+    battery_current_size -= 1;
   }
 }
 
-bool House::changeState() {
-  std::cout << "step no. " << stepsList.size() << std::endl;
-  if (cleaningFinished()) {
-    return true;
-  }
-  direction decision = robot->getStep();
-  std::cout << "HOUSEPOV: robot is in (" << robot_loc_i << "," << robot_loc_j
-            << ")" << std::endl;
-  std::cout << "HOUSEPOV: decision is " << directionString(decision)
-            << std::endl;
-  stepsList.push_back(decision);
-
-  if (end(decision))
-    return true;
-
-  if (!isInDocking() || decision != STAY) {
-    battery_current_size -= 1;
-  }
-
-  if (cells[robot_loc_i][robot_loc_j]->isWallInDirection(decision)) {
-    std::cerr << "ERROR: robot went into wall" << std::endl;
-    exit(1);
-  }
-  switch (decision) {
-  case STAY:
+void House::updateHouseDirt(Direction decision) {
+  if (decision == STAY) {
     cells[robot_loc_i][robot_loc_j]->decreaseDirtLevel();
-    if (isInDocking()) {
-      battery_current_size += ((float)battery_max_size / 20);
-    }
-    break;
-  case NORTH:
-    robot_loc_i--;
-    break;
-  case EAST:
-    robot_loc_j++;
-    break;
-  case SOUTH:
-    robot_loc_i++;
-    break;
-  case WEST:
-    robot_loc_j--;
-    break;
-  default:
-    return false;
-    break;
+  }
+}
+
+bool House::isBadStep(Direction decision) {
+  if (cells[robot_loc_i][robot_loc_j]->isWallInDirection(decision)) {
+    return true;
+  }
+  if (battery_current_size < 1 && !(isInDocking() && decision == STAY)) {
+    return true;
   }
   return false;
 }
 
-void House::create_output(std::string output_file) const {
-  std::cout << "creating output for house" << std::endl;
+bool House::changeState() {
+  std::cout << "step no. " << stepsList.size() << std::endl;
+
+  Direction decision = robot->getStep();
+
+  std::cout << "robot is in (" << robot_loc_i << "," << robot_loc_j << ")"
+            << std::endl;
+  std::cout << "decision is " << directionString(decision) << std::endl;
+
+  if (isBadStep(decision)) {
+    error = true;
+    return true;
+  }
+
+  stepsList.push_back(decision);
+
+  updateRobotLocation(decision);
+  updateRobotBattery(decision);
+  updateHouseDirt(decision);
+  return end(decision);
+}
+
+bool House::clean() {
+  while (!error && !changeState()) {
+  }
+  return !error;
+}
+
+bool House::createOutput(std::string output_file) const {
   std::cout << "creating output for house" << std::endl;
   std::ofstream file(output_file);
   if (!file.is_open()) {
     std::cerr << "Unable to open file: " << output_file << std::endl;
-    exit(1);
+    return true;
   }
 
-  for (direction d : stepsList) {
+  for (Direction d : stepsList) {
     file << directionString(d) << std::endl;
   }
   file << "Number of steps: " << stepsList.size() << std::endl;
@@ -384,4 +367,5 @@ void House::create_output(std::string output_file) const {
        << "successfuly" << std::endl;
 
   file.close();
+  return false;
 }

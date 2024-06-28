@@ -13,8 +13,8 @@ class VaccumGraphCell {
   VaccumGraphCell *neighbors[4];
   int loc_i;
   int loc_j;
-  bool wasVisited = false;
-  bool isDocking = false;
+  bool was_visited = false;
+  bool is_docking = false;
   u_int8_t dirt = 0;
   u_int32_t id = vaccumGraphCellID++;
 
@@ -25,11 +25,11 @@ public:
   bool getIsDirty() const;
   void setDocking();
   void setVisited(u_int8_t dirt);
-  void addNeighbor(direction dir, VaccumGraphCell *neighbor);
+  void addNeighbor(Direction dir, VaccumGraphCell *neighbor);
   int getLocI() const;
   int getLocJ() const;
   u_int32_t getID() const;
-  VaccumGraphCell *getNeighborInDirection(direction dir);
+  VaccumGraphCell *getNeighborInDirection(Direction dir);
   void decreaseDirt();
   void setDirt(u_int8_t dirt);
 };
@@ -37,33 +37,29 @@ public:
 class VaccumGraph {
   std::unordered_map<int, std::unordered_map<int, VaccumGraphCell *>> cells;
   VaccumGraphCell *current;
-  bool finishedScanning = false;
-  bool finishedCleaning = false;
+  bool finished_scanning = false;
+  bool finished_cleaning = false;
   int num_cells = 0;
 
 public:
   VaccumGraph();
 
-  void visit(u_int8_t dirt, bool wallNorth, bool wallEast, bool wallSouth,
-             bool wallWest);
+  void visit(u_int8_t dirt, bool wall_north, bool wall_east, bool wall_south,
+             bool wall_west);
   VaccumGraphCell *getCellInCoordinates(int loc_i, int loc_j);
   int bfsDistance(
       const std::function<bool(const VaccumGraphCell *)> &condition);
-  direction
+  Direction
   bfsDirection(const std::function<bool(const VaccumGraphCell *)> &condition);
   int distanceFromDocking();
-  direction dirForDocking();
-  int distanceFromUnvisited();
-  direction dirForUnvisited();
-  int distanceFromDirty();
-  direction dirForDirty();
+  Direction dirForDocking();
+  Direction dirForUnvisited();
+  Direction dirForDirty();
   bool isInDocking();
   bool houseWasFullyExplored() const;
   bool houseWasFullyCleaned() const;
   void decreaseDirt();
-  void updateCurrent(direction dir);
+  void updateCurrent(Direction dir);
   void addCell(VaccumGraphCell *cell);
-  int getCurrentI() const;
-  int getCurrentJ() const;
 };
 #endif

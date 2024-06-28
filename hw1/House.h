@@ -21,10 +21,10 @@ public:
 
   uint32_t getRow() const;
   uint32_t getCol() const;
-  bool isWallInDirection(direction dir) const;
+  bool isWallInDirection(Direction dir) const;
   uint32_t getDirtLevel() const;
   void decreaseDirtLevel();
-  void addWall(direction dir);
+  void addWall(Direction dir);
   void printCell() const;
 };
 
@@ -41,29 +41,28 @@ class House {
   u_int32_t max_steps;
   u_int32_t battery_max_size;
   float battery_current_size;
-  std::vector<direction> stepsList;
+  bool error = false;
+
+  std::vector<Direction> stepsList;
+
+  int getDirtLeft() const;
+  bool isDirtLeft() const;
+  bool isInDocking() const;
+  bool cleaningFinished() const;
+  bool robotDied(Direction decision) const;
+  bool end(Direction decision) const;
+  void updateRobotLocation(Direction decision);
+  void updateRobotBattery(Direction decision);
+  void updateHouseDirt(Direction decision);
+  bool isBadStep(Direction decision);
+  bool changeState();
 
 public:
   House(std::string file_name);
-
-  bool isThereWall(direction dir) const;
-
+  bool isThereWall(Direction dir) const;
   int howMuchDirtHere() const;
-
   int getBatteryLeft() const;
-  int getDirtLeft() const;
-
-  bool isDirtLeft() const;
-
-  bool isInDocking() const;
-
-  bool cleaningFinished() const;
-
-  bool end(direction decision) const;
-
-  void updateRobotLocation(direction decision);
-
-  bool changeState();
-  void create_output(std::string output_file) const;
+  bool clean();
+  bool createOutput(std::string output_file) const;
 };
 #endif

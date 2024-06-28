@@ -3,11 +3,9 @@
 
 #include <string>
 
-#define DEBUG
+enum Direction { NORTH, EAST, SOUTH, WEST, STAY, NOT_EXISTS };
 
-enum direction { NORTH, EAST, SOUTH, WEST, STAY, NOT_EXISTS };
-
-inline direction oppositeDirection(direction dir) {
+inline Direction oppositeDirection(Direction dir) {
   switch (dir) {
   case NORTH:
     return SOUTH;
@@ -27,7 +25,7 @@ inline direction oppositeDirection(direction dir) {
   }
 }
 
-inline std::string directionString(direction dir) {
+inline std::string directionString(Direction dir) {
   switch (dir) {
   case NORTH:
     return "North";
@@ -49,6 +47,34 @@ inline std::string directionString(direction dir) {
     break;
   }
   return "";
+}
+
+inline u_int32_t locIByDirection(u_int32_t i, Direction dir) {
+  switch (dir) {
+  case NORTH:
+    return i - 1;
+    break;
+  case SOUTH:
+    return i + 1;
+    break;
+  default:
+    return i;
+    break;
+  }
+}
+
+inline u_int32_t locJByDirection(u_int32_t j, Direction dir) {
+  switch (dir) {
+  case EAST:
+    return j + 1;
+    break;
+  case WEST:
+    return j - 1;
+    break;
+  default:
+    return j;
+    break;
+  }
 }
 
 #endif

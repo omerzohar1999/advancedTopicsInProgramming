@@ -6,21 +6,21 @@ VaccumGraphCell::VaccumGraphCell(int loc_i, int loc_j)
   for (int i = 0; i < 4; i++)
     neighbors[i] = nullptr;
 }
-bool VaccumGraphCell::getIsDocking() const { return isDocking; }
-bool VaccumGraphCell::getWasVisited() const { return wasVisited; }
+bool VaccumGraphCell::getIsDocking() const { return is_docking; }
+bool VaccumGraphCell::getWasVisited() const { return was_visited; }
 bool VaccumGraphCell::getIsDirty() const { return dirt != 0; }
-void VaccumGraphCell::setDocking() { isDocking = true; }
+void VaccumGraphCell::setDocking() { is_docking = true; }
 void VaccumGraphCell::setVisited(u_int8_t dirt) {
-  wasVisited = true;
+  was_visited = true;
   this->dirt = dirt;
 }
-void VaccumGraphCell::addNeighbor(direction dir, VaccumGraphCell *neighbor) {
+void VaccumGraphCell::addNeighbor(Direction dir, VaccumGraphCell *neighbor) {
   neighbors[dir] = neighbor;
 }
 int VaccumGraphCell::getLocI() const { return loc_i; }
 int VaccumGraphCell::getLocJ() const { return loc_j; }
 u_int32_t VaccumGraphCell::getID() const { return id; }
-VaccumGraphCell *VaccumGraphCell::getNeighborInDirection(direction dir) {
+VaccumGraphCell *VaccumGraphCell::getNeighborInDirection(Direction dir) {
   if (dir < 4) {
     return neighbors[dir];
   }
@@ -55,15 +55,15 @@ void VaccumGraph::addCell(VaccumGraphCell *cell) {
   num_cells++;
 }
 
-void VaccumGraph::visit(u_int8_t dirt, bool wallNorth, bool wallEast,
-                        bool wallSouth, bool wallWest) {
+void VaccumGraph::visit(u_int8_t dirt, bool wall_north, bool wall_east,
+                        bool wall_south, bool wall_west) {
   current->setDirt(dirt);
   if (current->getWasVisited())
     return;
   int locI = current->getLocI();
   int locJ = current->getLocJ();
 
-  if (!wallNorth) {
+  if (!wall_north) {
     VaccumGraphCell *cellInNorth = getCellInCoordinates(locI - 1, locJ);
     if (cellInNorth == nullptr) {
       cellInNorth = new VaccumGraphCell(locI - 1, locJ);
@@ -75,7 +75,7 @@ void VaccumGraph::visit(u_int8_t dirt, bool wallNorth, bool wallEast,
     current->addNeighbor(NORTH, nullptr);
   }
 
-  if (!wallEast) {
+  if (!wall_east) {
     VaccumGraphCell *cellInEast = getCellInCoordinates(locI, locJ + 1);
     if (cellInEast == nullptr) {
       cellInEast = new VaccumGraphCell(locI, locJ + 1);
@@ -87,7 +87,7 @@ void VaccumGraph::visit(u_int8_t dirt, bool wallNorth, bool wallEast,
     current->addNeighbor(EAST, nullptr);
   }
 
-  if (!wallSouth) {
+  if (!wall_south) {
     VaccumGraphCell *cellInSouth = getCellInCoordinates(locI + 1, locJ);
     if (cellInSouth == nullptr) {
       cellInSouth = new VaccumGraphCell(locI + 1, locJ);
@@ -99,7 +99,7 @@ void VaccumGraph::visit(u_int8_t dirt, bool wallNorth, bool wallEast,
     current->addNeighbor(SOUTH, nullptr);
   }
 
-  if (!wallWest) {
+  if (!wall_west) {
     VaccumGraphCell *cellInWest = getCellInCoordinates(locI, locJ - 1);
     if (cellInWest == nullptr) {
       cellInWest = new VaccumGraphCell(locI, locJ - 1);
@@ -126,7 +126,7 @@ int VaccumGraph::bfsDistance(
 
   std::vector<bool> visited(num_cells);
   std::vector<int> distances(num_cells);
-  std::vector<direction> parent(num_cells);
+  std::vector<Direction> parent(num_cells);
 
   std::fill(visited.begin(), visited.end(), false);
   std::fill(distances.begin(), distances.end(), -1);
@@ -189,14 +189,14 @@ int VaccumGraph::bfsDistance(
   return -1;
 }
 
-direction VaccumGraph::bfsDirection(
+Direction VaccumGraph::bfsDirection(
     const std::function<bool(const VaccumGraphCell *)> &condition) {
   if (condition(current)) {
     return STAY;
   }
   std::vector<bool> visited(num_cells);
   std::vector<int> distances(num_cells);
-  std::vector<direction> parent(num_cells);
+  std::vector<Direction> parent(num_cells);
 
   std::fill(visited.begin(), visited.end(), false);
   std::fill(distances.begin(), distances.end(), -1);
@@ -270,51 +270,34 @@ int VaccumGraph::distanceFromDocking() {
   return bfsDistance(cellIsDockingCondition);
 }
 
-direction VaccumGraph::dirForDocking() {
+Direction VaccumGraph::dirForDocking() {
   return bfsDirection(cellIsDockingCondition);
 }
 
-int VaccumGraph::distanceFromUnvisited() {
-  int ret = bfsDistance(cellWasntVisitedCondition);
-  if (ret == -1)
-    finishedScanning = true;
-  return ret;
-}
-
-direction VaccumGraph::dirForUnvisited() {
-  direction ret = bfsDirection(cellWasntVisitedCondition);
+Direction VaccumGraph::dirForUnvisited() {
+  Direction ret = bfsDirection(cellWasntVisitedCondition);
 
   if (ret == NOT_EXISTS)
-    finishedScanning = true;
+    finished_scanning = true;
   return ret;
 }
 
-int VaccumGraph::distanceFromDirty() {
-  int ret = bfsDistance(cellIsDirtyCondition);
-  if (ret == -1)
-    finishedCleaning = true;
-  return ret;
-}
-
-direction VaccumGraph::dirForDirty() {
-  direction ret = bfsDirection(cellIsDirtyCondition);
+Direction VaccumGraph::dirForDirty() {
+  Direction ret = bfsDirection(cellIsDirtyCondition);
   if (ret == NOT_EXISTS)
-    finishedCleaning = true;
+    finished_cleaning = true;
   return ret;
 }
 
 bool VaccumGraph::isInDocking() { return current->getIsDocking(); }
 
-bool VaccumGraph::houseWasFullyExplored() const { return finishedScanning; }
+bool VaccumGraph::houseWasFullyExplored() const { return finished_scanning; }
 
-bool VaccumGraph::houseWasFullyCleaned() const { return finishedCleaning; }
+bool VaccumGraph::houseWasFullyCleaned() const { return finished_cleaning; }
 
 void VaccumGraph::decreaseDirt() { current->decreaseDirt(); }
 
-void VaccumGraph::updateCurrent(direction dir) {
+void VaccumGraph::updateCurrent(Direction dir) {
   if (dir < 4)
     this->current = this->current->getNeighborInDirection(dir);
 }
-
-int VaccumGraph::getCurrentI() const { return current->getLocI(); }
-int VaccumGraph::getCurrentJ() const { return current->getLocJ(); }

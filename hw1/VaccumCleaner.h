@@ -12,12 +12,12 @@ class VaccumCleaner {
   VaccumGraph *houseGraph;
   u_int32_t battery_max_size;
   u_int32_t getBatteryStepsLeft();
-  bool isThereWall(direction dir);
+  bool isThereWall(Direction dir);
   int howMuchDirtHere();
 
 public:
   VaccumCleaner(u_int32_t battery_max_size, Sensor *sensor);
 
-  direction getStep();
+  Direction getStep();
 };
 #endif
