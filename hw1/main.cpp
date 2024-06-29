@@ -9,10 +9,5 @@ int main(int argc, char *argv[]) {
   }
   std::string input = argv[1];
   House *house = new House(input);
-  if (!house->clean()) {
-    return 1;
-  }
-  if (house->createOutput("output_" + input))
-    return 1;
-  return 0;
+  return house->clean() && house->createOutput("output_" + input);
 }

@@ -7,17 +7,11 @@
 u_int32_t VaccumCleaner::getBatteryStepsLeft() const {
   return sensor->getBatteryStepsLeft();
 }
-bool VaccumCleaner::isThereWall(Direction dir) {
-  bool ret = sensor->isThereWall(dir);
-  return ret;
-}
-int VaccumCleaner::howMuchDirtHere() const { return sensor->howMuchDirtHere(); }
 
-VaccumCleaner::VaccumCleaner(u_int32_t battery_max_size, Sensor *sensor) {
-  this->battery_max_size = battery_max_size;
-  this->sensor = sensor;
-  this->houseGraph = new VaccumGraph();
-}
+VaccumCleaner::VaccumCleaner(const u_int32_t battery_max_size,
+                             const Sensor *sensor)
+    : battery_max_size(battery_max_size), sensor(sensor),
+      houseGraph(new VaccumGraph()) {}
 
 bool VaccumCleaner::isCharging() const {
   return houseGraph->isInDocking() && getBatteryStepsLeft() < battery_max_size;
@@ -38,34 +32,28 @@ Direction VaccumCleaner::getStep() {
 
   if (mustGoCharge()) {
     ret = houseGraph->dirForDocking();
-    houseGraph->updateCurrent(ret);
-    return ret;
+    goto end;
   }
 
   if (!(houseGraph->houseWasFullyExplored())) {
     ret = houseGraph->dirForUnvisited();
-    if (ret != NOT_EXISTS) {
-      houseGraph->updateCurrent(ret);
-      return ret;
-    }
+    if (ret != NOT_EXISTS)
+      goto end;
   }
 
   if (!(houseGraph->houseWasFullyCleaned())) {
     ret = houseGraph->dirForDirty();
-    if (ret != NOT_EXISTS) {
-      houseGraph->updateCurrent(ret);
-      return ret;
-    }
+    if (ret != NOT_EXISTS)
+      goto end;
   }
 
   ret = houseGraph->dirForDocking();
   if (ret == STAY) {
-    // from robot POV, house cleaning finished;
-    // no more tiles to discover or clean, and we're in docking already.
-    // send "END signal"
+    // from robot POV, house cleaning is finished.
     ret = NOT_EXISTS;
   }
 
+end:
   houseGraph->updateCurrent(ret);
   return ret;
 }

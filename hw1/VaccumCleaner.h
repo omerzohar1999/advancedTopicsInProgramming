@@ -8,17 +8,17 @@
 #include <functional>
 
 class VaccumCleaner {
-  Sensor *sensor;
+  const u_int32_t battery_max_size;
+  const Sensor *sensor;
+
   VaccumGraph *houseGraph;
-  u_int32_t battery_max_size;
+
   u_int32_t getBatteryStepsLeft() const;
-  bool isThereWall(Direction dir);
-  int howMuchDirtHere() const;
   bool isCharging() const;
   bool mustGoCharge() const;
 
 public:
-  VaccumCleaner(u_int32_t battery_max_size, Sensor *sensor);
+  VaccumCleaner(const u_int32_t battery_max_size, const Sensor *sensor);
 
   Direction getStep();
 };

@@ -13,6 +13,8 @@ void VaccumGraphCell::setDocking() { is_docking = true; }
 void VaccumGraphCell::setVisited() { was_visited = true; }
 void VaccumGraphCell::addNeighbor(Direction dir, VaccumGraphCell *neighbor) {
   neighbors[dir] = neighbor;
+  if (neighbor != nullptr)
+    neighbor->neighbors[oppositeDirection(dir)] = this;
 }
 int VaccumGraphCell::getLocI() const { return loc_i; }
 int VaccumGraphCell::getLocJ() const { return loc_j; }
@@ -65,25 +67,20 @@ void VaccumGraph::visit(const Sensor *sensor) {
   for (int i = 0; i < 4; i++) {
 
     Direction dir = (Direction)i;
-    u_int32_t locIInDir = locIByDirection(locI, dir);
-    u_int32_t locJInDir = locJByDirection(locJ, dir);
+    VaccumGraphCell *cellInDirection = nullptr;
 
     if (!sensor->isThereWall(dir)) {
+      u_int32_t locIInDir = locIByDirection(locI, dir);
+      u_int32_t locJInDir = locJByDirection(locJ, dir);
 
-      VaccumGraphCell *cellInDirection =
-          getCellInCoordinates(locIInDir, locJInDir);
+      cellInDirection = getCellInCoordinates(locIInDir, locJInDir);
 
       if (cellInDirection == nullptr) {
         cellInDirection = new VaccumGraphCell(locIInDir, locJInDir);
         addCell(cellInDirection);
       }
-
-      current->addNeighbor(dir, cellInDirection);
-      cellInDirection->addNeighbor(oppositeDirection(dir), current);
-
-    } else {
-      current->addNeighbor(dir, nullptr);
     }
+    current->addNeighbor(dir, cellInDirection);
   }
 
   current->setVisited();

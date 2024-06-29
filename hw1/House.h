@@ -54,6 +54,7 @@ class House {
   void updateRobotLocation(Direction decision);
   void updateRobotBattery(Direction decision);
   void updateHouseDirt(Direction decision);
+  HouseCell *robotCurrentCell() const;
   bool isCharging(Direction decision) const;
   bool isBadStep(Direction decision) const;
   bool changeState();

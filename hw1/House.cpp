@@ -52,7 +52,7 @@ HouseCell::HouseCell(std::string line) {
   exists_wall[WEST] = w;
   dirt_level = dirt;
 
-  printCell();
+  // printCell();
 }
 
 HouseCell::HouseCell(int x, int y, bool n, bool e, bool s, bool w)
@@ -71,7 +71,10 @@ void HouseCell::decreaseDirtLevel() {
   if (dirt_level > 0)
     dirt_level--;
 }
-void HouseCell::addWall(Direction dir) { exists_wall[dir] = true; }
+void HouseCell::addWall(Direction dir) {
+  if (dir < STAY)
+    exists_wall[dir] = true;
+}
 
 void HouseCell::printCell() const {
   std::cout << "(" << location_rows << "," << location_cols << ")n"
@@ -241,13 +244,15 @@ House::House(std::string file_name) {
   }
 }
 
+HouseCell *House::robotCurrentCell() const {
+  return cells[robot_loc_i][robot_loc_j];
+}
 bool House::isThereWall(Direction dir) const {
-  return this->cells[this->robot_loc_i][this->robot_loc_j]->isWallInDirection(
-      dir);
+  return robotCurrentCell()->isWallInDirection(dir);
 }
 
 int House::howMuchDirtHere() const {
-  return cells[robot_loc_i][robot_loc_j]->getDirtLevel();
+  return robotCurrentCell()->getDirtLevel();
 }
 
 int House::getBatteryLeft() const { return std::floor(battery_current_size); }
@@ -301,7 +306,7 @@ void House::updateRobotBattery(Direction decision) {
 
 void House::updateHouseDirt(Direction decision) {
   if (decision == STAY) {
-    cells[robot_loc_i][robot_loc_j]->decreaseDirtLevel();
+    robotCurrentCell()->decreaseDirtLevel();
   }
 }
 
@@ -310,7 +315,7 @@ inline bool House::isCharging(Direction decision) const {
 }
 
 bool House::isBadStep(Direction decision) const {
-  if (cells[robot_loc_i][robot_loc_j]->isWallInDirection(decision)) {
+  if (robotCurrentCell()->isWallInDirection(decision)) {
     return true;
   }
   if (battery_current_size < 1 && !isCharging(decision)) {
@@ -321,44 +326,45 @@ bool House::isBadStep(Direction decision) const {
 
 bool House::changeState() {
   // gets one step from the robot and updates house accordingly.
-  // returns whether the simulation finished; whether an invalid move happened,
-  // max steps reached, cleaning finished etc.
-
-  std::cout << "step no. " << stepsList.size() << std::endl;
+  // returns whether the simulation finished.
 
   Direction decision = robot->getStep();
-
-  std::cout << "robot is in (" << robot_loc_i << "," << robot_loc_j << ")"
-            << std::endl;
-  std::cout << "decision is " << directionString(decision) << std::endl;
 
   if (isBadStep(decision)) {
     error = true;
     return true;
   }
 
+  if (end(decision))
+    return true;
+
   stepsList.push_back(decision);
 
   updateRobotLocation(decision);
   updateRobotBattery(decision);
   updateHouseDirt(decision);
-  return end(decision);
+  return false;
 }
 
 bool House::clean() {
   // runs the whole simulation, stops when it ends or if an error occurred.
-  // returns whether the cleaning finished without error.
+  // returns whether the cleaning finished successfully.
+
   while (!error && !changeState()) {
   }
   return !error;
 }
 
 bool House::createOutput(std::string output_file) const {
-  std::cout << "creating output for house" << std::endl;
+  // creates output file.
+  // returns whether output creation finished successfully.
+
+  // std::cout << "creating output for house" << std::endl;
+
   std::ofstream file(output_file);
   if (!file.is_open()) {
     std::cerr << "Unable to open file: " << output_file << std::endl;
-    return true;
+    return false;
   }
 
   for (Direction d : stepsList) {
@@ -366,11 +372,10 @@ bool House::createOutput(std::string output_file) const {
   }
   file << "Number of steps: " << stepsList.size() << std::endl;
   file << "Dirt left: " << getDirtLeft() << std::endl;
-  file << "Vaccum cleaner is " << (getBatteryLeft() == 0 ? "" : "not ")
-       << "dead" << std::endl;
-  file << "Mission ended " << (cleaningFinished() ? "" : "not ")
-       << "successfuly" << std::endl;
+  file << "Vaccum cleaner is " << (robotDied() ? "dead" : "alive") << std::endl;
+  file << "Mission ended " << (cleaningFinished() ? "" : "un") << "successfuly"
+       << std::endl;
 
   file.close();
-  return false;
+  return true;
 }
