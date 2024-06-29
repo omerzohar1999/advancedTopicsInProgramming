@@ -1,4 +1,4 @@
-1048576,20
+1000,20
 2,2,true,false,false,false,0
 0,0,false,false,false,false,9
 0,1,false,false,false,false,0
