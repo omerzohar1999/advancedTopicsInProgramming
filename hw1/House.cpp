@@ -286,9 +286,8 @@ bool House::robotDied() const {
   return !isInDocking() && battery_current_size < 1;
 }
 
-bool House::end(Direction decision) const {
-  return cleaningFinished() || robotDied() || stepsList.size() > max_steps ||
-         decision == NOT_EXISTS;
+bool House::end() const {
+  return cleaningFinished() || robotDied() || stepsList.size() >= max_steps;
 }
 
 void House::updateRobotLocation(Direction decision) {
@@ -330,20 +329,20 @@ bool House::changeState() {
 
   Direction decision = robot->getStep();
 
+  if (decision == NOT_EXISTS)
+    return true;
+
   if (isBadStep(decision)) {
     error = true;
     return true;
   }
-
-  if (end(decision))
-    return true;
 
   stepsList.push_back(decision);
 
   updateRobotLocation(decision);
   updateRobotBattery(decision);
   updateHouseDirt(decision);
-  return false;
+  return end();
 }
 
 bool House::clean() {

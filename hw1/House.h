@@ -50,7 +50,7 @@ class House {
   bool isInDocking() const;
   bool cleaningFinished() const;
   bool robotDied() const;
-  bool end(Direction decision) const;
+  bool end() const;
   void updateRobotLocation(Direction decision);
   void updateRobotBattery(Direction decision);
   void updateHouseDirt(Direction decision);
