@@ -49,12 +49,13 @@ class House {
   bool isDirtLeft() const;
   bool isInDocking() const;
   bool cleaningFinished() const;
-  bool robotDied(Direction decision) const;
+  bool robotDied() const;
   bool end(Direction decision) const;
   void updateRobotLocation(Direction decision);
   void updateRobotBattery(Direction decision);
   void updateHouseDirt(Direction decision);
-  bool isBadStep(Direction decision);
+  bool isCharging(Direction decision) const;
+  bool isBadStep(Direction decision) const;
   bool changeState();
 
 public:

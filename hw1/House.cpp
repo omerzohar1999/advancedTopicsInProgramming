@@ -44,9 +44,6 @@ HouseCell::HouseCell(std::string line) {
   std::getline(ss, item, ',');
   dirt = (u_int8_t)(item[0] - '0');
 
-  std::cout << "(" << row << "," << col << ")n" << n << "e" << e << "s" << s
-            << "w" << w << "d" << dirt << std::endl;
-
   location_rows = row;
   location_cols = col;
   exists_wall[NORTH] = n;
@@ -84,7 +81,6 @@ void HouseCell::printCell() const {
 }
 
 House::House(std::string file_name) {
-  std::cout << "building house from file" << std::endl;
   std::ifstream file(file_name);
   if (!file.is_open()) {
     std::cerr << "Unable to open file: " << file_name << std::endl;
@@ -243,7 +239,6 @@ House::House(std::string file_name) {
     cells[0][j]->addWall(NORTH);
     cells[house_size_rows - 1][j]->addWall(SOUTH);
   }
-  std::cout << "finished building house from file" << std::endl;
 }
 
 bool House::isThereWall(Direction dir) const {
@@ -282,13 +277,13 @@ bool House::isInDocking() const {
 
 bool House::cleaningFinished() const { return isInDocking() && !isDirtLeft(); }
 
-bool House::robotDied(Direction decision) const {
-  return !(isInDocking() && decision == STAY) && battery_current_size < 1;
+bool House::robotDied() const {
+  return !isInDocking() && battery_current_size < 1;
 }
 
 bool House::end(Direction decision) const {
-  return cleaningFinished() || robotDied(decision) ||
-         stepsList.size() > max_steps || decision == NOT_EXISTS;
+  return cleaningFinished() || robotDied() || stepsList.size() > max_steps ||
+         decision == NOT_EXISTS;
 }
 
 void House::updateRobotLocation(Direction decision) {
@@ -297,7 +292,7 @@ void House::updateRobotLocation(Direction decision) {
 }
 
 void House::updateRobotBattery(Direction decision) {
-  if (isInDocking() && decision == STAY) {
+  if (isCharging(decision)) {
     battery_current_size += ((float)battery_max_size / 20);
   } else {
     battery_current_size -= 1;
@@ -310,17 +305,25 @@ void House::updateHouseDirt(Direction decision) {
   }
 }
 
-bool House::isBadStep(Direction decision) {
+inline bool House::isCharging(Direction decision) const {
+  return isInDocking() && decision == STAY;
+}
+
+bool House::isBadStep(Direction decision) const {
   if (cells[robot_loc_i][robot_loc_j]->isWallInDirection(decision)) {
     return true;
   }
-  if (battery_current_size < 1 && !(isInDocking() && decision == STAY)) {
+  if (battery_current_size < 1 && !isCharging(decision)) {
     return true;
   }
   return false;
 }
 
 bool House::changeState() {
+  // gets one step from the robot and updates house accordingly.
+  // returns whether the simulation finished; whether an invalid move happened,
+  // max steps reached, cleaning finished etc.
+
   std::cout << "step no. " << stepsList.size() << std::endl;
 
   Direction decision = robot->getStep();
@@ -343,6 +346,8 @@ bool House::changeState() {
 }
 
 bool House::clean() {
+  // runs the whole simulation, stops when it ends or if an error occurred.
+  // returns whether the cleaning finished without error.
   while (!error && !changeState()) {
   }
   return !error;

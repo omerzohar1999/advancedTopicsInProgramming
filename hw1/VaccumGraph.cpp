@@ -10,10 +10,7 @@ bool VaccumGraphCell::getIsDocking() const { return is_docking; }
 bool VaccumGraphCell::getWasVisited() const { return was_visited; }
 bool VaccumGraphCell::getIsDirty() const { return dirt != 0; }
 void VaccumGraphCell::setDocking() { is_docking = true; }
-void VaccumGraphCell::setVisited(u_int8_t dirt) {
-  was_visited = true;
-  this->dirt = dirt;
-}
+void VaccumGraphCell::setVisited() { was_visited = true; }
 void VaccumGraphCell::addNeighbor(Direction dir, VaccumGraphCell *neighbor) {
   neighbors[dir] = neighbor;
 }
@@ -55,63 +52,41 @@ void VaccumGraph::addCell(VaccumGraphCell *cell) {
   num_cells++;
 }
 
-void VaccumGraph::visit(u_int8_t dirt, bool wall_north, bool wall_east,
-                        bool wall_south, bool wall_west) {
-  current->setDirt(dirt);
+void VaccumGraph::visit(const Sensor *sensor) {
+  current->setDirt(sensor->howMuchDirtHere());
   if (current->getWasVisited())
     return;
   int locI = current->getLocI();
   int locJ = current->getLocJ();
 
-  if (!wall_north) {
-    VaccumGraphCell *cellInNorth = getCellInCoordinates(locI - 1, locJ);
-    if (cellInNorth == nullptr) {
-      cellInNorth = new VaccumGraphCell(locI - 1, locJ);
-      addCell(cellInNorth);
+  // for each direction, if wall doesnt exist:
+  //  if cell was previously discovered there, add as neighbor.
+  //  else, create cell and add as neighbor.
+  for (int i = 0; i < 4; i++) {
+
+    Direction dir = (Direction)i;
+    u_int32_t locIInDir = locIByDirection(locI, dir);
+    u_int32_t locJInDir = locJByDirection(locJ, dir);
+
+    if (!sensor->isThereWall(dir)) {
+
+      VaccumGraphCell *cellInDirection =
+          getCellInCoordinates(locIInDir, locJInDir);
+
+      if (cellInDirection == nullptr) {
+        cellInDirection = new VaccumGraphCell(locIInDir, locJInDir);
+        addCell(cellInDirection);
+      }
+
+      current->addNeighbor(dir, cellInDirection);
+      cellInDirection->addNeighbor(oppositeDirection(dir), current);
+
+    } else {
+      current->addNeighbor(dir, nullptr);
     }
-    current->addNeighbor(NORTH, cellInNorth);
-    cellInNorth->addNeighbor(SOUTH, current);
-  } else {
-    current->addNeighbor(NORTH, nullptr);
   }
 
-  if (!wall_east) {
-    VaccumGraphCell *cellInEast = getCellInCoordinates(locI, locJ + 1);
-    if (cellInEast == nullptr) {
-      cellInEast = new VaccumGraphCell(locI, locJ + 1);
-      addCell(cellInEast);
-    }
-    current->addNeighbor(EAST, cellInEast);
-    cellInEast->addNeighbor(WEST, current);
-  } else {
-    current->addNeighbor(EAST, nullptr);
-  }
-
-  if (!wall_south) {
-    VaccumGraphCell *cellInSouth = getCellInCoordinates(locI + 1, locJ);
-    if (cellInSouth == nullptr) {
-      cellInSouth = new VaccumGraphCell(locI + 1, locJ);
-      addCell(cellInSouth);
-    }
-    current->addNeighbor(SOUTH, cellInSouth);
-    cellInSouth->addNeighbor(NORTH, current);
-  } else {
-    current->addNeighbor(SOUTH, nullptr);
-  }
-
-  if (!wall_west) {
-    VaccumGraphCell *cellInWest = getCellInCoordinates(locI, locJ - 1);
-    if (cellInWest == nullptr) {
-      cellInWest = new VaccumGraphCell(locI, locJ - 1);
-      addCell(cellInWest);
-    }
-    current->addNeighbor(WEST, cellInWest);
-    cellInWest->addNeighbor(EAST, current);
-  } else {
-    current->addNeighbor(WEST, nullptr);
-  }
-
-  current->setVisited(dirt);
+  current->setVisited();
 }
 
 VaccumGraphCell *VaccumGraph::getCellInCoordinates(int loc_i, int loc_j) {
@@ -300,4 +275,6 @@ void VaccumGraph::decreaseDirt() { current->decreaseDirt(); }
 void VaccumGraph::updateCurrent(Direction dir) {
   if (dir < 4)
     this->current = this->current->getNeighborInDirection(dir);
+  if (dir == STAY)
+    decreaseDirt();
 }

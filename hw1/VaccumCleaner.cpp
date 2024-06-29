@@ -4,14 +4,14 @@
 #include "VaccumGraph.h"
 #include <iostream>
 
-u_int32_t VaccumCleaner::getBatteryStepsLeft() {
+u_int32_t VaccumCleaner::getBatteryStepsLeft() const {
   return sensor->getBatteryStepsLeft();
 }
 bool VaccumCleaner::isThereWall(Direction dir) {
   bool ret = sensor->isThereWall(dir);
   return ret;
 }
-int VaccumCleaner::howMuchDirtHere() { return sensor->howMuchDirtHere(); }
+int VaccumCleaner::howMuchDirtHere() const { return sensor->howMuchDirtHere(); }
 
 VaccumCleaner::VaccumCleaner(u_int32_t battery_max_size, Sensor *sensor) {
   this->battery_max_size = battery_max_size;
@@ -19,45 +19,53 @@ VaccumCleaner::VaccumCleaner(u_int32_t battery_max_size, Sensor *sensor) {
   this->houseGraph = new VaccumGraph();
 }
 
-Direction VaccumCleaner::getStep() {
+bool VaccumCleaner::isCharging() const {
+  return houseGraph->isInDocking() && getBatteryStepsLeft() < battery_max_size;
+}
 
-  houseGraph->visit(howMuchDirtHere(), isThereWall(NORTH), isThereWall(EAST),
-                    isThereWall(SOUTH), isThereWall(WEST));
-  if (houseGraph->isInDocking() && getBatteryStepsLeft() < battery_max_size) {
-    // in docking and not full battery. stay!
+bool VaccumCleaner::mustGoCharge() const {
+  return houseGraph->distanceFromDocking() >= (int)getBatteryStepsLeft() - 1;
+}
+
+Direction VaccumCleaner::getStep() {
+  Direction ret;
+
+  houseGraph->visit(sensor);
+
+  if (isCharging()) {
     return STAY;
   }
-  if (houseGraph->distanceFromDocking() >= (int)getBatteryStepsLeft() - 2) {
-    // battery will run out if we dont go to docking
-    Direction ret = houseGraph->dirForDocking();
+
+  if (mustGoCharge()) {
+    ret = houseGraph->dirForDocking();
     houseGraph->updateCurrent(ret);
     return ret;
   }
+
   if (!(houseGraph->houseWasFullyExplored())) {
-    Direction ret = houseGraph->dirForUnvisited();
-    this->houseGraph->updateCurrent(ret);
-    if (ret != NOT_EXISTS)
+    ret = houseGraph->dirForUnvisited();
+    if (ret != NOT_EXISTS) {
+      houseGraph->updateCurrent(ret);
       return ret;
+    }
   }
+
   if (!(houseGraph->houseWasFullyCleaned())) {
-    Direction ret = houseGraph->dirForDirty();
-    if (ret == NOT_EXISTS) {
-      Direction ret = houseGraph->dirForDocking();
-      this->houseGraph->updateCurrent(ret);
+    ret = houseGraph->dirForDirty();
+    if (ret != NOT_EXISTS) {
+      houseGraph->updateCurrent(ret);
       return ret;
     }
-    if (ret == STAY) {
-      houseGraph->decreaseDirt();
-    }
-    houseGraph->updateCurrent(ret);
-    return ret;
   }
-  Direction ret = houseGraph->dirForDocking();
-  this->houseGraph->updateCurrent(ret);
+
+  ret = houseGraph->dirForDocking();
   if (ret == STAY) {
-    // we do not need to charge, we discovered all that's reachable and cleaned
-    // it, and we're already in the docking station.
-    return NOT_EXISTS;
+    // from robot POV, house cleaning finished;
+    // no more tiles to discover or clean, and we're in docking already.
+    // send "END signal"
+    ret = NOT_EXISTS;
   }
+
+  houseGraph->updateCurrent(ret);
   return ret;
 }

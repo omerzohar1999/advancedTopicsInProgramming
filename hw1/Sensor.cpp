@@ -1,7 +1,7 @@
 #include "Sensor.h"
 #include <iostream>
 
-Sensor::Sensor(House *house) : house(house) {};
+Sensor::Sensor(const House *house) : house(house) {};
 u_int32_t Sensor::getBatteryStepsLeft() const {
   return house->getBatteryLeft();
 };

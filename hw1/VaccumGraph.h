@@ -2,6 +2,7 @@
 #define VACUUMGRAPH_H
 
 #include "Direction.h"
+#include "Sensor.h"
 #include <functional>
 #include <map>
 #include <queue>
@@ -24,7 +25,7 @@ public:
   bool getWasVisited() const;
   bool getIsDirty() const;
   void setDocking();
-  void setVisited(u_int8_t dirt);
+  void setVisited();
   void addNeighbor(Direction dir, VaccumGraphCell *neighbor);
   int getLocI() const;
   int getLocJ() const;
@@ -44,8 +45,7 @@ class VaccumGraph {
 public:
   VaccumGraph();
 
-  void visit(u_int8_t dirt, bool wall_north, bool wall_east, bool wall_south,
-             bool wall_west);
+  void visit(const Sensor *sensor);
   VaccumGraphCell *getCellInCoordinates(int loc_i, int loc_j);
   int bfsDistance(
       const std::function<bool(const VaccumGraphCell *)> &condition);
