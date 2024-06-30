@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 #include "Direction.h"
 #include "House.h"
@@ -77,9 +78,17 @@ void HouseCell::addWall(Direction dir) {
 
 House::House(std::string file_name) {
     try {
-        std::ifstream file(file_name);
+        std::filesystem::path file_path(file_name);
+
+        // Check if the path is relative or absolute
+        if (!file_path.is_absolute()) {
+            // Resolve relative path
+            file_path = std::filesystem::absolute(file_path);
+        }
+
+        std::ifstream file(file_path.string());
         if (!file.is_open()) {
-            std::cerr << "Unable to open file: " << file_name << std::endl;
+            std::cerr << "Unable to open file: " << file_path << std::endl;
             error = true;
             return;
         }
@@ -359,14 +368,24 @@ bool House::clean() {
   return !error;
 }
 
-bool House::createOutput(std::string output_file) const {
+bool House::createOutput(std::string input_file) const {
   // creates output file.
   // returns whether output creation finished successfully.
 
   try {
-      std::ofstream file(output_file);
+      std::filesystem::path input_file_path(input_file);
+
+      std::filesystem::path output_file_path = addPrefixToFilePath(input_file_path, "output_");
+
+      // Check if the path is relative or absolute
+      if (!output_file_path.is_absolute()) {
+          // Resolve relative path
+          output_file_path = std::filesystem::absolute(output_file_path);
+      }
+
+      std::ofstream file(output_file_path.string());
       if (!file.is_open()) {
-          std::cerr << "Unable to open file: " << output_file << std::endl;
+          std::cerr << "Unable to open file: " << input_file << std::endl;
           return false;
       }
 
@@ -458,4 +477,17 @@ void House::updateVisualization(Direction decision) {
     } catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;
     }
+}
+
+std::filesystem::path House::addPrefixToFilePath(const std::filesystem::path& file_path, const std::string& prefix) const {
+    // Extract the parent path (directory)
+    std::filesystem::path parent_path = file_path.parent_path();
+
+    // Extract the filename and add the prefix
+    std::string new_filename = prefix + file_path.filename().string();
+
+    // Construct the new file path
+    std::filesystem::path new_file_path = parent_path / new_filename;
+
+    return new_file_path;
 }

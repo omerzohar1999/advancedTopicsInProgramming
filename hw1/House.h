@@ -4,6 +4,7 @@
 #include "DevTools.h"
 #include <string>
 #include <vector>
+#include <filesystem>
 
 class VaccumCleaner;
 class Sensor;
@@ -59,7 +60,8 @@ class House {
   bool isCharging(Direction decision) const;
   bool isBadStep(Direction decision) const;
   bool changeState();
-  void updateVisualization();
+  void updateVisualization(Direction decision);
+  std::filesystem::path addPrefixToFilePath(const std::filesystem::path &file_path, const std::string &prefix) const;
 
 public:
   House(std::string file_name);
@@ -67,8 +69,7 @@ public:
   int howMuchDirtHere() const;
   int getBatteryLeft() const;
   bool clean();
-  bool createOutput(std::string output_file) const;
+  bool createOutput(std::string input_file) const;
 
-    void updateVisualization(Direction decision);
 };
 #endif
