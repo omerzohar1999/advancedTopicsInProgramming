@@ -1,6 +1,5 @@
 #include "House.h"
 #include <iostream>
-#include <string.h>
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -9,5 +8,6 @@ int main(int argc, char *argv[]) {
   }
   std::string input = argv[1];
   House *house = new House(input);
+
   return house->clean() && house->createOutput("output_" + input);
 }

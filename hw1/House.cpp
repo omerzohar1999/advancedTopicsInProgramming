@@ -10,6 +10,7 @@
 #include "House.h"
 #include "Sensor.h"
 #include "VaccumCleaner.h"
+#include "DevTools.h"
 
 HouseCell::HouseCell(std::string line) {
   u_int32_t row;
@@ -113,6 +114,7 @@ House::House(std::string file_name) {
   givenCells.push_back(new HouseCell(line));
 
   sensor = new Sensor(this);
+  devTools = new DevTools();
 
   robot = new VaccumCleaner(battery_max_size, sensor);
   robot_loc_i = givenCells[0]->getRow();
@@ -342,6 +344,9 @@ bool House::changeState() {
   updateRobotLocation(decision);
   updateRobotBattery(decision);
   updateHouseDirt(decision);
+
+  updateVisualization(decision);
+
   return end();
 }
 
@@ -377,4 +382,68 @@ bool House::createOutput(std::string output_file) const {
 
   file.close();
   return true;
+}
+
+void House::updateVisualization(Direction decision) {
+    if (!devTools->isVisualizationEnabled())
+        return;
+
+    std::string file_name = devTools->getVisualizationFileName();
+    std::ofstream outFile(file_name, std::ios::app);
+    if (!outFile) {
+        std::cerr << "Error opening file for writing." << std::endl;
+        return;
+    }
+
+    // Write the direction
+    outFile << directionString(decision) << std::endl;
+    outFile << std::endl;  // Empty line
+
+    // Convert cells to ASCII table
+    size_t rows = cells.size();
+    size_t cols = rows > 0 ? cells[0].size() : 0;
+
+    for (size_t i = 0; i < rows; ++i) {
+        // Top walls
+        for (size_t j = 0; j < cols; ++j) {
+            if (cells[i][j]->isWallInDirection(NORTH)) {
+                outFile << "+---";
+            } else {
+                outFile << "+   ";
+            }
+        }
+        outFile << "+" << std::endl;
+
+        // Side walls and dirt level
+        for (size_t j = 0; j < cols; ++j) {
+            if (cells[i][j]->isWallInDirection(WEST)) {
+                outFile << "|";
+            } else {
+                outFile << " ";
+            }
+            outFile << " ";
+            if (i == robot_loc_i && j == robot_loc_j) {
+                outFile << "V";
+            } else if (i == docking_loc_i && j == docking_loc_j) {
+                outFile << "D";
+            } else {
+                outFile << cells[i][j]->getDirtLevel();
+            }
+            outFile << " ";
+        }
+        outFile << "|" << std::endl;
+    }
+
+    // Bottom walls
+    for (size_t j = 0; j < cols; ++j) {
+        if (cells[rows - 1][j]->isWallInDirection(SOUTH)) {
+            outFile << "+---";
+        } else {
+            outFile << "+   ";
+        }
+    }
+    outFile << "+" << std::endl;
+    outFile << std::endl;  // Empty line
+    outFile.close();
+
 }

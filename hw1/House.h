@@ -1,6 +1,7 @@
 #ifndef HOUSE_H
 #define HOUSE_H
 #include "Direction.h"
+#include "DevTools.h"
 #include <string>
 #include <vector>
 
@@ -25,6 +26,7 @@ public:
   uint32_t getDirtLevel() const;
   void decreaseDirtLevel();
   void addWall(Direction dir);
+
   void printCell() const;
 };
 
@@ -32,6 +34,7 @@ class House {
   std::vector<std::vector<HouseCell *>> cells;
   VaccumCleaner *robot;
   Sensor *sensor;
+  DevTools *devTools;
   u_int32_t robot_loc_i;
   u_int32_t robot_loc_j;
   u_int32_t docking_loc_i;
@@ -58,6 +61,7 @@ class House {
   bool isCharging(Direction decision) const;
   bool isBadStep(Direction decision) const;
   bool changeState();
+  void updateVisualization();
 
 public:
   House(std::string file_name);
@@ -66,5 +70,7 @@ public:
   int getBatteryLeft() const;
   bool clean();
   bool createOutput(std::string output_file) const;
+
+    void updateVisualization(Direction decision);
 };
 #endif
