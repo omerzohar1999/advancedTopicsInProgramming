@@ -3,3 +3,4 @@ CMakeLists.txt
 .idea
 output*.txt
 myrobot
+visualization.txt

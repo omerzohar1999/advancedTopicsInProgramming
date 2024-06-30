@@ -52,8 +52,6 @@ HouseCell::HouseCell(std::string line) {
   exists_wall[SOUTH] = s;
   exists_wall[WEST] = w;
   dirt_level = dirt;
-
-  // printCell();
 }
 
 HouseCell::HouseCell(int x, int y, bool n, bool e, bool s, bool w)
@@ -77,173 +75,175 @@ void HouseCell::addWall(Direction dir) {
     exists_wall[dir] = true;
 }
 
-void HouseCell::printCell() const {
-  std::cout << "(" << location_rows << "," << location_cols << ")n"
-            << exists_wall[NORTH] << "e" << exists_wall[EAST] << "s"
-            << exists_wall[SOUTH] << "w" << exists_wall[WEST] << "d"
-            << dirt_level << std::endl;
-}
-
 House::House(std::string file_name) {
-  std::ifstream file(file_name);
-  if (!file.is_open()) {
-    std::cerr << "Unable to open file: " << file_name << std::endl;
-    error = true;
-    return;
-  }
+    try {
+        std::ifstream file(file_name);
+        if (!file.is_open()) {
+            std::cerr << "Unable to open file: " << file_name << std::endl;
+            error = true;
+            return;
+        }
 
-  std::string line;
-  std::getline(file, line);
+        std::string line;
+        std::getline(file, line);
 
-  std::stringstream ss(line);
-  std::string item;
+        std::stringstream ss(line);
+        std::string item;
 
-  std::getline(ss, item, ',');
-  this->max_steps = std::stoul(item);
+        std::getline(ss, item, ',');
+        this->max_steps = std::stoul(item);
 
-  std::getline(ss, item, ',');
-  battery_max_size = std::stoul(item);
-  battery_current_size = battery_max_size;
+        std::getline(ss, item, ',');
+        battery_max_size = std::stoul(item);
+        battery_current_size = battery_max_size;
 
-  // create linked list, read all into it, find max x,y
-  std::vector<HouseCell *> givenCells;
+        // create linked list, read all into it, find max x,y
+        std::vector<HouseCell *> givenCells;
 
-  // read first line
-  // create robot in this location
-  std::getline(file, line);
-  givenCells.push_back(new HouseCell(line));
+        // read first line
+        // create robot in this location
+        std::getline(file, line);
+        givenCells.push_back(new HouseCell(line));
 
-  sensor = new Sensor(this);
-  devTools = new DevTools();
+        sensor = new Sensor(this);
+        devTools = new DevTools();
 
-  robot = new VaccumCleaner(battery_max_size, sensor);
-  robot_loc_i = givenCells[0]->getRow();
-  robot_loc_j = givenCells[0]->getCol();
+        robot = new VaccumCleaner(battery_max_size, sensor);
+        robot_loc_i = givenCells[0]->getRow();
+        robot_loc_j = givenCells[0]->getCol();
 
-  docking_loc_i = robot_loc_i;
-  docking_loc_j = robot_loc_j;
+        docking_loc_i = robot_loc_i;
+        docking_loc_j = robot_loc_j;
 
-  house_size_rows = docking_loc_i;
-  house_size_cols = docking_loc_j;
+        house_size_rows = docking_loc_i;
+        house_size_cols = docking_loc_j;
 
-  HouseCell *curr;
+        HouseCell *curr;
 
-  while (std::getline(file, line)) {
-    curr = new HouseCell(line);
-    if (curr->getRow() + 1 > house_size_rows)
-      house_size_rows = curr->getRow() + 1;
-    if (curr->getCol() + 1 > house_size_cols)
-      house_size_cols = curr->getCol() + 1;
-    givenCells.push_back(curr);
-  }
+        while (std::getline(file, line)) {
+            curr = new HouseCell(line);
+            if (curr->getRow() + 1 > house_size_rows)
+                house_size_rows = curr->getRow() + 1;
+            if (curr->getCol() + 1 > house_size_cols)
+                house_size_cols = curr->getCol() + 1;
+            givenCells.push_back(curr);
+        }
 
-  cells.resize(house_size_rows);
-  for (u_int32_t i = 0; i < house_size_rows; i++) {
-    cells[i].resize(house_size_cols);
-  }
-  for (u_int32_t i = 0; i < house_size_rows; i++) {
-    for (u_int32_t j = 0; j < house_size_cols; j++) {
-      cells[i][j] = nullptr;
+        cells.resize(house_size_rows);
+        for (u_int32_t i = 0; i < house_size_rows; i++) {
+            cells[i].resize(house_size_cols);
+        }
+        for (u_int32_t i = 0; i < house_size_rows; i++) {
+            for (u_int32_t j = 0; j < house_size_cols; j++) {
+                cells[i][j] = nullptr;
+            }
+        }
+        HouseCell *cell;
+        for (size_t i = 0; i < givenCells.size(); i++) {
+            cell = givenCells.at(i);
+
+            if (cells[cell->getRow()][cell->getCol()] != nullptr) {
+                std::cerr << "ERROR: cell (" << cell->getRow() << "," << cell->getCol()
+                          << ") was inserted twice" << std::endl;
+                error = true;
+                return;
+            }
+            cells[cell->getRow()][cell->getCol()] = cell;
+        }
+
+        for (u_int32_t i = 0; i < house_size_rows; i++) {
+            for (u_int32_t j = 0; j < house_size_cols; j++) {
+                if (cells[i][j] == nullptr) {
+                    bool n = false;
+                    bool e = false;
+                    bool s = false;
+                    bool w = false;
+                    if (i == 0 || (i > 0 && cells[i - 1][j] != nullptr &&
+                                   cells[i - 1][j]->isWallInDirection(SOUTH))) {
+                        n = true;
+                    }
+                    if (j == 0 || (j > 0 && cells[i][j - 1] != nullptr &&
+                                   cells[i][j - 1]->isWallInDirection(EAST))) {
+                        w = true;
+                    }
+                    if (i == house_size_rows - 1 ||
+                        (i < house_size_rows - 1 && cells[i + 1][j] != nullptr &&
+                         cells[i - 1][j]->isWallInDirection(WEST))) {
+                        e = true;
+                    }
+                    if (j == house_size_cols - 1 ||
+                        (j < house_size_cols - 1 && cells[i][j + 1] != nullptr &&
+                         cells[i][j + 1]->isWallInDirection(NORTH))) {
+                        s = true;
+                    }
+                    cells[i][j] = new HouseCell(i, j, n, e, s, w);
+                } else {
+                    // check consistency
+                    if (i > 0 && cells[i - 1][j] != nullptr &&
+                        cells[i][j]->isWallInDirection(NORTH) !=
+                        cells[i - 1][j]->isWallInDirection(SOUTH)) {
+                        std::cerr << "consistency error:" << std::endl;
+                        std::cerr << "(" << i << "," << j << "), wallInNorth:"
+                                  << cells[i][j]->isWallInDirection(NORTH) << std::endl;
+                        std::cerr << "(" << i - 1 << "," << j << "), wallInSouth:"
+                                  << cells[i - 1][j]->isWallInDirection(SOUTH) << std::endl;
+                        error = true;
+                        return;
+                    }
+                    if (i < house_size_rows - 1 && cells[i + 1][j] != nullptr &&
+                        cells[i][j]->isWallInDirection(SOUTH) !=
+                        cells[i + 1][j]->isWallInDirection(NORTH)) {
+                        std::cerr << "consistency error:" << std::endl;
+                        std::cerr << "(" << i << "," << j << "), wallInSouth:"
+                                  << cells[i][j]->isWallInDirection(SOUTH) << std::endl;
+                        std::cerr << "(" << i + 1 << "," << j << "), wallInNorth:"
+                                  << cells[i + 1][j]->isWallInDirection(NORTH) << std::endl;
+                        error = true;
+                        return;
+                    }
+                    if (j > 0 && cells[i][j - 1] != nullptr &&
+                        cells[i][j]->isWallInDirection(WEST) !=
+                        cells[i][j - 1]->isWallInDirection(EAST)) {
+                        std::cerr << "consistency error:" << std::endl;
+                        std::cerr << "(" << i << "," << j
+                                  << "), wallInWest:" << cells[i][j]->isWallInDirection(WEST)
+                                  << std::endl;
+                        std::cerr << "(" << i << "," << j - 1 << "), wallInEast:"
+                                  << cells[i][j - 1]->isWallInDirection(EAST) << std::endl;
+                        error = true;
+                        return;
+                    }
+                    if (j < house_size_cols - 1 && cells[i][j + 1] != nullptr &&
+                        cells[i][j]->isWallInDirection(EAST) !=
+                        cells[i][j + 1]->isWallInDirection(WEST)) {
+                        std::cerr << "consistency error:" << std::endl;
+                        std::cerr << "(" << i << "," << j
+                                  << "), wallInEast:" << cells[i][j]->isWallInDirection(EAST)
+                                  << std::endl;
+                        std::cerr << "(" << i << "," << j + 1 << "), wallInWest:"
+                                  << cells[i][j + 1]->isWallInDirection(WEST) << std::endl;
+                        error = true;
+                        return;
+                    }
+                }
+            }
+        }
+        for (u_int32_t i = 0; i < house_size_rows; i++) {
+            cells[i][0]->addWall(WEST);
+            cells[i][house_size_cols - 1]->addWall(EAST);
+        }
+        for (u_int32_t j = 0; j < house_size_cols; j++) {
+            cells[0][j]->addWall(NORTH);
+            cells[house_size_rows - 1][j]->addWall(SOUTH);
+        }
+    } catch (const std::ifstream::failure& e) {
+        std::cerr << "Exception opening/reading file: " << e.what() << std::endl;
+        error = true;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+        error = true;
     }
-  }
-  HouseCell *cell;
-  for (size_t i = 0; i < givenCells.size(); i++) {
-    cell = givenCells.at(i);
 
-    if (cells[cell->getRow()][cell->getCol()] != nullptr) {
-      std::cerr << "ERROR: cell (" << cell->getRow() << "," << cell->getCol()
-                << ") was inserted twice" << std::endl;
-      error = true;
-      return;
-    }
-    cells[cell->getRow()][cell->getCol()] = cell;
-  }
-
-  for (u_int32_t i = 0; i < house_size_rows; i++) {
-    for (u_int32_t j = 0; j < house_size_cols; j++) {
-      if (cells[i][j] == nullptr) {
-        bool n = false;
-        bool e = false;
-        bool s = false;
-        bool w = false;
-        if (i == 0 || (i > 0 && cells[i - 1][j] != nullptr &&
-                       cells[i - 1][j]->isWallInDirection(SOUTH))) {
-          n = true;
-        }
-        if (j == 0 || (j > 0 && cells[i][j - 1] != nullptr &&
-                       cells[i][j - 1]->isWallInDirection(EAST))) {
-          w = true;
-        }
-        if (i == house_size_rows - 1 ||
-            (i < house_size_rows - 1 && cells[i + 1][j] != nullptr &&
-             cells[i - 1][j]->isWallInDirection(WEST))) {
-          e = true;
-        }
-        if (j == house_size_cols - 1 ||
-            (j < house_size_cols - 1 && cells[i][j + 1] != nullptr &&
-             cells[i][j + 1]->isWallInDirection(NORTH))) {
-          s = true;
-        }
-        cells[i][j] = new HouseCell(i, j, n, e, s, w);
-      } else {
-        // check consistency
-        if (i > 0 && cells[i - 1][j] != nullptr &&
-            cells[i][j]->isWallInDirection(NORTH) !=
-                cells[i - 1][j]->isWallInDirection(SOUTH)) {
-          std::cerr << "consistency error:" << std::endl;
-          std::cerr << "(" << i << "," << j << "), wallInNorth:"
-                    << cells[i][j]->isWallInDirection(NORTH) << std::endl;
-          std::cerr << "(" << i - 1 << "," << j << "), wallInSouth:"
-                    << cells[i - 1][j]->isWallInDirection(SOUTH) << std::endl;
-          error = true;
-          return;
-        }
-        if (i < house_size_rows - 1 && cells[i + 1][j] != nullptr &&
-            cells[i][j]->isWallInDirection(SOUTH) !=
-                cells[i + 1][j]->isWallInDirection(NORTH)) {
-          std::cerr << "consistency error:" << std::endl;
-          std::cerr << "(" << i << "," << j << "), wallInSouth:"
-                    << cells[i][j]->isWallInDirection(SOUTH) << std::endl;
-          std::cerr << "(" << i + 1 << "," << j << "), wallInNorth:"
-                    << cells[i + 1][j]->isWallInDirection(NORTH) << std::endl;
-          error = true;
-          return;
-        }
-        if (j > 0 && cells[i][j - 1] != nullptr &&
-            cells[i][j]->isWallInDirection(WEST) !=
-                cells[i][j - 1]->isWallInDirection(EAST)) {
-          std::cerr << "consistency error:" << std::endl;
-          std::cerr << "(" << i << "," << j
-                    << "), wallInWest:" << cells[i][j]->isWallInDirection(WEST)
-                    << std::endl;
-          std::cerr << "(" << i << "," << j - 1 << "), wallInEast:"
-                    << cells[i][j - 1]->isWallInDirection(EAST) << std::endl;
-          error = true;
-          return;
-        }
-        if (j < house_size_cols - 1 && cells[i][j + 1] != nullptr &&
-            cells[i][j]->isWallInDirection(EAST) !=
-                cells[i][j + 1]->isWallInDirection(WEST)) {
-          std::cerr << "consistency error:" << std::endl;
-          std::cerr << "(" << i << "," << j
-                    << "), wallInEast:" << cells[i][j]->isWallInDirection(EAST)
-                    << std::endl;
-          std::cerr << "(" << i << "," << j + 1 << "), wallInWest:"
-                    << cells[i][j + 1]->isWallInDirection(WEST) << std::endl;
-          error = true;
-          return;
-        }
-      }
-    }
-  }
-  for (u_int32_t i = 0; i < house_size_rows; i++) {
-    cells[i][0]->addWall(WEST);
-    cells[i][house_size_cols - 1]->addWall(EAST);
-  }
-  for (u_int32_t j = 0; j < house_size_cols; j++) {
-    cells[0][j]->addWall(NORTH);
-    cells[house_size_rows - 1][j]->addWall(SOUTH);
-  }
 }
 
 HouseCell *House::robotCurrentCell() const {
@@ -363,87 +363,99 @@ bool House::createOutput(std::string output_file) const {
   // creates output file.
   // returns whether output creation finished successfully.
 
-  // std::cout << "creating output for house" << std::endl;
+  try {
+      std::ofstream file(output_file);
+      if (!file.is_open()) {
+          std::cerr << "Unable to open file: " << output_file << std::endl;
+          return false;
+      }
 
-  std::ofstream file(output_file);
-  if (!file.is_open()) {
-    std::cerr << "Unable to open file: " << output_file << std::endl;
-    return false;
+      for (Direction d : stepsList) {
+          file << directionString(d) << std::endl;
+      }
+      file << "Number of steps: " << stepsList.size() << std::endl;
+      file << "Dirt left: " << getDirtLeft() << std::endl;
+      file << "Vaccum cleaner is " << (robotDied() ? "dead" : "alive") << std::endl;
+      file << "Mission ended " << (cleaningFinished() ? "" : "un") << "successfuly"
+           << std::endl;
+
+      file.close();
+      return true;
+
+  } catch (const std::ofstream::failure& e) {
+      std::cerr << "Exception writing to output file: " << e.what() << std::endl;
+      return false;
+  } catch (const std::exception& e) {
+      std::cerr << "Exception: " << e.what() << std::endl;
+      return false;
   }
-
-  for (Direction d : stepsList) {
-    file << directionString(d) << std::endl;
-  }
-  file << "Number of steps: " << stepsList.size() << std::endl;
-  file << "Dirt left: " << getDirtLeft() << std::endl;
-  file << "Vaccum cleaner is " << (robotDied() ? "dead" : "alive") << std::endl;
-  file << "Mission ended " << (cleaningFinished() ? "" : "un") << "successfuly"
-       << std::endl;
-
-  file.close();
-  return true;
 }
 
 void House::updateVisualization(Direction decision) {
     if (!devTools->isVisualizationEnabled())
         return;
 
-    std::string file_name = devTools->getVisualizationFileName();
-    std::ofstream outFile(file_name, std::ios::app);
-    if (!outFile) {
-        std::cerr << "Error opening file for writing." << std::endl;
-        return;
-    }
+    try {
+        std::string file_name = devTools->getVisualizationFileName();
+        std::ofstream outFile(file_name, std::ios::app);
+        if (!outFile) {
+            std::cerr << "Error opening file for writing." << std::endl;
+            return;
+        }
 
-    // Write the direction
-    outFile << directionString(decision) << std::endl;
-    outFile << std::endl;  // Empty line
+        // Write the direction
+        outFile << directionString(decision) << std::endl;
+        outFile << std::endl;  // Empty line
 
-    // Convert cells to ASCII table
-    size_t rows = cells.size();
-    size_t cols = rows > 0 ? cells[0].size() : 0;
+        // Convert cells to ASCII table
+        size_t rows = cells.size();
+        size_t cols = rows > 0 ? cells[0].size() : 0;
 
-    for (size_t i = 0; i < rows; ++i) {
-        // Top walls
+        for (size_t i = 0; i < rows; ++i) {
+            // Top walls
+            for (size_t j = 0; j < cols; ++j) {
+                if (cells[i][j]->isWallInDirection(NORTH)) {
+                    outFile << "+---";
+                } else {
+                    outFile << "+   ";
+                }
+            }
+            outFile << "+" << std::endl;
+
+            // Side walls and dirt level
+            for (size_t j = 0; j < cols; ++j) {
+                if (cells[i][j]->isWallInDirection(WEST)) {
+                    outFile << "|";
+                } else {
+                    outFile << " ";
+                }
+                outFile << " ";
+                if (i == robot_loc_i && j == robot_loc_j) {
+                    outFile << "V";
+                } else if (i == docking_loc_i && j == docking_loc_j) {
+                    outFile << "D";
+                } else {
+                    outFile << cells[i][j]->getDirtLevel();
+                }
+                outFile << " ";
+            }
+            outFile << "|" << std::endl;
+        }
+
+        // Bottom walls
         for (size_t j = 0; j < cols; ++j) {
-            if (cells[i][j]->isWallInDirection(NORTH)) {
+            if (cells[rows - 1][j]->isWallInDirection(SOUTH)) {
                 outFile << "+---";
             } else {
                 outFile << "+   ";
             }
         }
         outFile << "+" << std::endl;
-
-        // Side walls and dirt level
-        for (size_t j = 0; j < cols; ++j) {
-            if (cells[i][j]->isWallInDirection(WEST)) {
-                outFile << "|";
-            } else {
-                outFile << " ";
-            }
-            outFile << " ";
-            if (i == robot_loc_i && j == robot_loc_j) {
-                outFile << "V";
-            } else if (i == docking_loc_i && j == docking_loc_j) {
-                outFile << "D";
-            } else {
-                outFile << cells[i][j]->getDirtLevel();
-            }
-            outFile << " ";
-        }
-        outFile << "|" << std::endl;
+        outFile << std::endl;  // Empty line
+        outFile.close();
+    } catch (const std::ofstream::failure& e) {
+        std::cerr << "Exception writing to file: " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
     }
-
-    // Bottom walls
-    for (size_t j = 0; j < cols; ++j) {
-        if (cells[rows - 1][j]->isWallInDirection(SOUTH)) {
-            outFile << "+---";
-        } else {
-            outFile << "+   ";
-        }
-    }
-    outFile << "+" << std::endl;
-    outFile << std::endl;  // Empty line
-    outFile.close();
-
 }

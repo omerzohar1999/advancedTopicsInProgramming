@@ -26,8 +26,6 @@ public:
   uint32_t getDirtLevel() const;
   void decreaseDirtLevel();
   void addWall(Direction dir);
-
-  void printCell() const;
 };
 
 class House {
