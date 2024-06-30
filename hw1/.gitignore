@@ -1,6 +1,7 @@
 cmake-build-debug
 CMakeLists.txt
 .idea
-output*.txt
+output_input*.txt
 myrobot
 visualization.txt
+html

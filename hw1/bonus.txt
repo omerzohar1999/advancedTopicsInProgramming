@@ -1,0 +1,15 @@
+Visualization:
+- If a text file `project-config.txt` is present, setting `VISUALIZATION = true` in it will write an ASCII text visualization of the house to a file named `visualization.txt`
+- The visualization shows the movement of the vacuum cleaner in the house, as well as its location, and the location of the docking station
+- Vacuum cleaner is denoted by `V`
+- Docking station is denoted by `D`
+- Every cell in the table not `V` and `D` shows the dirt level on it
+- Walls are also indicated between cells
+- This feature was implemented in `DevTools.h`, `DevTools.cpp` and in `House.cpp` (house constructor in line 109 and in `updateVisualization()` method)
+- Example `visualization.txt` file provided shows it fully running on `input_c.txt`, the 6x7 house described in the README.md / HDL.
+
+Documentation HTML file:
+- We generated a HTML file using Doxygen for better documentation of the classes.
+- The documentation includes useful collaboration graphs for understanding the class relationships (inheritance, containment, etc.)
+- Re-generation of this documentation can be done using the `Doxyfile` configuration file provided, with `doxygen` installed and calling `doxygen Doxyfile`.
+- Opening the HTML file in the browser can be done using: `open html/index.html`
