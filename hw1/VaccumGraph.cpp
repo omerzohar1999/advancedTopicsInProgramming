@@ -242,6 +242,14 @@ int VaccumGraph::distanceFromDocking() {
   return bfsDistance(cellIsDockingCondition);
 }
 
+int VaccumGraph::distanceFromUnvisited() {
+    return bfsDistance(cellWasntVisitedCondition);
+}
+
+int VaccumGraph::distanceFromDirty() {
+    return bfsDistance(cellIsDirtyCondition);
+}
+
 Direction VaccumGraph::dirForDocking() {
   return bfsDirection(cellIsDockingCondition);
 }

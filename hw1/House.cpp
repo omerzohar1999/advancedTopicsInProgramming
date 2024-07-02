@@ -117,7 +117,7 @@ House::House(std::string file_name) {
         sensor = new Sensor(this);
         devTools = new DevTools();
 
-        robot = new VaccumCleaner(battery_max_size, sensor);
+        robot = new VaccumCleaner(battery_max_size, sensor, max_steps);
         robot_loc_i = givenCells[0]->getRow();
         robot_loc_j = givenCells[0]->getCol();
 

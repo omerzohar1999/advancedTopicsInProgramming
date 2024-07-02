@@ -61,5 +61,7 @@ public:
   void decreaseDirt();
   void updateCurrent(Direction dir);
   void addCell(VaccumGraphCell *cell);
+  int distanceFromUnvisited();
+  int distanceFromDirty();
 };
 #endif
