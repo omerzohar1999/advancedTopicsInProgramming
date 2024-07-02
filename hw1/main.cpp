@@ -10,5 +10,5 @@ int main(int argc, char *argv[]) {
   std::string input = argv[1];
   House *house = new House(input);
 
-  return house->clean() && house->createOutput(input);
+  return !(house->clean() && house->createOutput(input));
 }
