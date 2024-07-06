@@ -6,15 +6,17 @@
 enum class Direction { North, East, South, West };
 enum class Step { North, East, South, West, Stay, Finish };
 
-bool isStationaryStep(Step s) { return s == Step::Stay || s == Step::Finish; }
+inline bool isStationaryStep(Step s) {
+  return s == Step::Stay || s == Step::Finish;
+}
 
-Direction stepToDir(Step step) {
+inline Direction stepToDir(Step step) {
   switch (step) {
   case Step::North:
     return Direction::North;
     break;
   case Step::East:
-    return Direction::North;
+    return Direction::East;
     break;
   case Step::South:
     return Direction::South;
@@ -27,7 +29,7 @@ Direction stepToDir(Step step) {
   }
 }
 
-Step dirToStep(Direction dir) {
+inline Step dirToStep(Direction dir) {
   switch (dir) {
   case Direction::North:
     return Step::North;
@@ -84,6 +86,42 @@ inline std::string stepString(Step dir) {
     return "West";
   case Step::Stay:
     return "Stay";
+  case Step::Finish:
+    return "Finish";
+  default:
+    return "";
+  }
+}
+
+inline std::string stepStringOutput(Step dir) {
+  switch (dir) {
+  case Step::North:
+    return "N";
+  case Step::East:
+    return "E";
+  case Step::South:
+    return "S";
+  case Step::West:
+    return "W";
+  case Step::Stay:
+    return "s";
+  case Step::Finish:
+    return "F";
+  default:
+    return "";
+  }
+}
+
+inline std::string directionString(Direction dir) {
+  switch (dir) {
+  case Direction::North:
+    return "North";
+  case Direction::East:
+    return "East";
+  case Direction::South:
+    return "South";
+  case Direction::West:
+    return "West";
   default:
     return "";
   }

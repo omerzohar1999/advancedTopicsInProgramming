@@ -1,32 +1,39 @@
 #ifndef MYSENSORS_H
 #define MYSENSORS_H
 
-#include <Sensors.h>
+#include "Sensors.h"
+#include "Simulator.h"
 
 class MyWallsSensor : public WallsSensor {
-  std::shared_ptr<const MySimulator> sim;
+  const Simulator *sim;
 
 public:
-  MyWallsSensor(std::shared_ptr<const MySimulator> sim);
+  MyWallsSensor() {};
+  MyWallsSensor(MyWallsSensor &s);
   ~MyWallsSensor() {};
+  void setHouse(const Simulator &sim);
   bool isWall(Direction d) const;
 };
 
 class MyDirtSensor : public DirtSensor {
-  std::shared_ptr<const MySimulator> sim;
+  const Simulator *sim;
 
 public:
-  MyDirtSensor(std::shared_ptr<const MySimulator> sim);
+  MyDirtSensor() {};
+  MyDirtSensor(MyDirtSensor &s);
   ~MyDirtSensor() {};
+  void setHouse(const Simulator &sim);
   int dirtLevel() const;
 };
 
 class MyBatteryMeter : public BatteryMeter {
-  std::shared_ptr<const MySimulator> sim;
+  const Simulator *sim;
 
 public:
-  MyBatteryMeter(std::shared_ptr<const MySimulator> sim);
-  ~MyBatteryMeter() {}
+  MyBatteryMeter() {};
+  MyBatteryMeter(MyBatteryMeter &m);
+  ~MyBatteryMeter() {};
+  void setHouse(const Simulator &sim);
   std::size_t getBatteryState() const;
 };
 #endif

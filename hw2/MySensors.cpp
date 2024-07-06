@@ -2,15 +2,13 @@
 #include <iostream>
 #include <memory>
 
-MyBatteryMeter::MyBatteryMeter(std::shared_ptr<const MySimulator> house) {
-  this->sim = house;
-};
-MyWallsSensor::MyWallsSensor(std::shared_ptr<const MySimulator> house) {
-  this->sim = house;
-};
-MyDirtSensor::MyDirtSensor(std::shared_ptr<const MySimulator> house) {
-  this->sim = house;
-};
+MyBatteryMeter::MyBatteryMeter(MyBatteryMeter &m) { this->sim = m.sim; }
+
+void MyBatteryMeter::setHouse(const Simulator &house) { this->sim = &house; };
+MyWallsSensor::MyWallsSensor(MyWallsSensor &s) { this->sim = s.sim; }
+void MyWallsSensor::setHouse(const Simulator &house) { this->sim = &house; };
+MyDirtSensor::MyDirtSensor(MyDirtSensor &s) { this->sim = s.sim; }
+void MyDirtSensor::setHouse(const Simulator &house) { this->sim = &house; };
 std::size_t MyBatteryMeter::getBatteryState() const {
   return sim->getBatteryLeft();
 };

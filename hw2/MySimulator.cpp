@@ -11,13 +11,15 @@
 #include "AbstractAlgorithm.h"
 #include "DevTools.h"
 #include "Direction.h"
-#include "House.h"
 #include "MySensors.h"
+#include "MySimulator.h"
 
-HouseCell::HouseCell(bool is_wall, u_int8_t dirt_level)
-    : dirt_level(dirt_level), is_wall(is_wall) {};
+HouseCell::HouseCell() {};
 
 uint32_t HouseCell::getDirtLevel() const { return (uint32_t)dirt_level; }
+void HouseCell::setDirtLevel(u_int8_t dirt_level) {
+  this->dirt_level = dirt_level;
+}
 void HouseCell::decreaseDirtLevel() {
   if (dirt_level > 0)
     dirt_level--;
@@ -53,51 +55,134 @@ MySimulator::MySimulator(std::string file_name) {
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     if (item != "MaxSteps") {
-      // error
+      // TODO: error
     }
     std::getline(ss, item);
+    item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     // TODO: check the following value is indeed integer
-    this->max_steps = std::stoul(item);
+    this->max_steps = std::stoi(item);
 
     std::getline(file, line);
+    ss = std::stringstream(line);
 
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     if (item != "MaxBattery") {
-      // error
+      // TODO: error
     }
 
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     // TODO: check the following value is indeed integer
-    battery_max_size = std::stoul(item);
+    battery_max_size = std::stoi(item);
     battery_current_size = battery_max_size;
 
     std::getline(file, line);
+    ss = std::stringstream(line);
 
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     if (item != "Rows") {
-      // error
+      // TODO: error
     }
 
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     // TODO: check the following value is indeed integer
-    house_size_rows = std::stoul(item);
+    house_size_rows = std::stoi(item);
 
     std::getline(file, line);
+    ss = std::stringstream(line);
 
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     if (item != "Cols") {
-      // error
+      // TODO: error
     }
 
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     // TODO: check the following value is indeed integer
-    house_size_cols = std::stoul(item);
+    house_size_cols = std::stoi(item);
+
+    std::cout << "house size is (" << house_size_rows << "," << house_size_cols
+              << ")" << std::endl;
+
+    cells.resize(house_size_rows + 2);
+    std::cout << "including outer walls, numOfRows:" << cells.size()
+              << std::endl;
+    for (size_t i = 0; i < cells.size(); i++) {
+      cells[i].resize(house_size_cols + 2);
+      cells[i][0].setWall();
+      cells[i][cells[i].size() - 1].setWall();
+      if (i == 0 || i == cells.size() - 1) {
+        for (size_t j = 1; j < cells[i].size() - 1; j++) {
+          cells[i][j].setWall();
+        }
+      }
+    }
+    int ptr_i = 1;
+
+    while (ptr_i <= house_size_rows && std::getline(file, line)) {
+      int ptr_j = 1;
+      while (ptr_j <= house_size_cols && ptr_j <= (int)line.size()) {
+        // switch by value of cell
+        switch (line[ptr_j - 1]) {
+        case ' ':
+          break;
+        case '0':
+          break;
+        case '1':
+          cells[ptr_i][ptr_j].setDirtLevel(1);
+          break;
+        case '2':
+          cells[ptr_i][ptr_j].setDirtLevel(2);
+          break;
+        case '3':
+          cells[ptr_i][ptr_j].setDirtLevel(3);
+          break;
+        case '4':
+          cells[ptr_i][ptr_j].setDirtLevel(4);
+          break;
+        case '5':
+          cells[ptr_i][ptr_j].setDirtLevel(5);
+          break;
+        case '6':
+          cells[ptr_i][ptr_j].setDirtLevel(6);
+          break;
+        case '7':
+          cells[ptr_i][ptr_j].setDirtLevel(7);
+          break;
+        case '8':
+          cells[ptr_i][ptr_j].setDirtLevel(8);
+          break;
+        case '9':
+          cells[ptr_i][ptr_j].setDirtLevel(9);
+          break;
+        case 'D':
+          if (robot_loc_i != -1) {
+            // error
+          }
+          cells[ptr_i][ptr_j].setDirtLevel(0);
+          robot_loc_i = ptr_i;
+          robot_loc_j = ptr_j;
+          docking_loc_i = ptr_i;
+          docking_loc_j = ptr_j;
+          break;
+        case 'W':
+          cells[ptr_i][ptr_j].setDirtLevel(0);
+          cells[ptr_i][ptr_j].setWall();
+          break;
+        }
+        ptr_j++;
+      }
+      ptr_i++;
+    }
+    if (robot_loc_i == -1) {
+      // TODO: error
+    }
+
+    printHouse();
 
   } catch (const std::ifstream::failure &e) {
     std::cerr << "Exception opening/reading file: " << e.what() << std::endl;
@@ -109,20 +194,24 @@ MySimulator::MySimulator(std::string file_name) {
 }
 
 bool MySimulator::isThereWall(Direction dir) const {
+  std::cout << "checking if there's wall" << std::endl;
+  std::cout << "robot location: (" << robot_loc_i << "," << robot_loc_j << ")"
+            << std::endl;
+  std::cout << "move direction: " << directionString(dir) << std::endl;
   switch (dir) {
   case Direction::North:
-    return robot_loc_i == 0 || cells[robot_loc_i - 1][robot_loc_j].getIsWall();
+    return robot_loc_i <= 1 || cells[robot_loc_i - 1][robot_loc_j].getIsWall();
     break;
   case Direction::East:
-    return robot_loc_j == house_size_cols + 1 ||
+    return robot_loc_j >= house_size_cols ||
            cells[robot_loc_i][robot_loc_j + 1].getIsWall();
     break;
   case Direction::South:
-    return robot_loc_i == house_size_rows + 1 ||
+    return robot_loc_i >= house_size_rows ||
            cells[robot_loc_i + 1][robot_loc_j].getIsWall();
     break;
   case Direction::West:
-    return robot_loc_j == 0 || cells[robot_loc_i][robot_loc_j - 1].getIsWall();
+    return robot_loc_j <= 1 || cells[robot_loc_i][robot_loc_j - 1].getIsWall();
     break;
   }
 }
@@ -136,8 +225,8 @@ int MySimulator::getBatteryLeft() const {
 }
 int MySimulator::getDirtLeft() const {
   int ret = 0;
-  for (u_int32_t row = 0; row < house_size_rows; row++) {
-    for (u_int32_t col = 0; col < house_size_cols; col++) {
+  for (size_t row = 0; row < cells.size(); row++) {
+    for (size_t col = 0; col < cells[row].size(); col++) {
       ret += (cells[row][col].getDirtLevel());
     }
   }
@@ -145,8 +234,8 @@ int MySimulator::getDirtLeft() const {
 }
 
 bool MySimulator::isDirtLeft() const {
-  for (u_int32_t row = 0; row < house_size_rows; row++) {
-    for (u_int32_t col = 0; col < house_size_cols; col++) {
+  for (size_t row = 0; row < cells.size(); row++) {
+    for (size_t col = 0; col < cells[row].size(); col++) {
       if (cells[row][col].getDirtLevel() > 0)
         return true;
     }
@@ -166,8 +255,16 @@ bool MySimulator::robotDied() const {
   return !isInDocking() && battery_current_size < 1;
 }
 
+std::string MySimulator::statusString() const {
+  if (battery_current_size < 1)
+    return "DEAD";
+  if (cleaningFinished())
+    return "FINISHED";
+  return "WORKING";
+}
+
 bool MySimulator::end() const {
-  return cleaningFinished() || robotDied() || stepsList.size() >= max_steps;
+  return robotDied() || stepsList.size() >= (size_t)max_steps;
 }
 
 void MySimulator::updateRobotLocation(Step decision) {
@@ -197,8 +294,10 @@ inline bool MySimulator::isCharging(Step decision) const {
 
 bool MySimulator::isBadStep(Step decision) const {
   if (!isStationaryStep(decision) && isThereWall(stepToDir(decision))) {
+    std::cout << "step is into a wall" << std::endl;
     return true;
   }
+  std::cout << "step is not into a wall" << std::endl;
   if (battery_current_size < 1 && !isCharging(decision)) {
     return true;
   }
@@ -211,31 +310,41 @@ bool MySimulator::changeState() {
 
   Step decision = robot->nextStep();
 
+  std::cout << "got step " << stepString(decision) << std::endl;
+
+  stepsList.push_back(decision);
+
   if (decision == Step::Finish)
     return true;
+
+  std::cout << "step was not finish" << std::endl;
 
   if (isBadStep(decision)) {
     error = true;
     return true;
   }
 
-  stepsList.push_back(decision);
+  std::cout << "step was not bad" << std::endl;
 
   updateRobotLocation(decision);
   updateRobotBattery(decision);
   updateHouseDirt(decision);
 
-  updateVisualization(decision);
+  printHouse();
+
+  // updateVisualization(decision);  TODO
 
   return end();
 }
 
 void MySimulator::setAlgorithm(AbstractAlgorithm &algo) {
-  auto self = shared_from_this();
-  robot = std::unique_ptr<AbstractAlgorithm>(&algo);
-  auto batteryMeter = MyBatteryMeter(self);
-  auto wallsSensor = MyWallsSensor(self);
-  auto dirtSensor = MyDirtSensor(self);
+  robot = &algo;
+  robot->setMaxSteps(max_steps);
+
+  batteryMeter.setHouse(*this);
+  wallsSensor.setHouse(*this);
+  dirtSensor.setHouse(*this);
+
   robot->setBatteryMeter(std::move(batteryMeter));
   robot->setWallsSensor(std::move(wallsSensor));
   robot->setDirtSensor(std::move(dirtSensor));
@@ -272,15 +381,13 @@ bool MySimulator::createOutput(std::string input_file) const {
       return false;
     }
 
+    file << "NumSteps = " << stepsList.size() << std::endl;
+    file << "DirtLeft = " << getDirtLeft() << std::endl;
+    file << "Status = " << statusString() << std::endl;
+    file << "Steps:" << std::endl;
     for (Step d : stepsList) {
-      file << stepString(d) << std::endl;
+      file << stepStringOutput(d);
     }
-    file << "Number of steps: " << stepsList.size() << std::endl;
-    file << "Dirt left: " << getDirtLeft() << std::endl;
-    file << "Vaccum cleaner is " << (robotDied() ? "dead" : "alive")
-         << std::endl;
-    file << "Mission ended " << (cleaningFinished() ? "" : "un")
-         << "successfuly" << std::endl;
 
     file.close();
     return true;
@@ -291,6 +398,24 @@ bool MySimulator::createOutput(std::string input_file) const {
   } catch (const std::exception &e) {
     std::cerr << "Exception: " << e.what() << std::endl;
     return false;
+  }
+}
+void MySimulator::printHouse() {
+
+  for (size_t i = 0; i < cells.size(); i++) {
+    for (size_t j = 0; j < cells[i].size(); j++) {
+      if (cells[i][j].getIsWall())
+        std::cout << "W";
+      else if (i == (size_t)robot_loc_i && j == (size_t)robot_loc_j)
+        std::cout << "R";
+      else if (i == (size_t)docking_loc_i && j == (size_t)docking_loc_j)
+        std::cout << "D";
+      else if (cells[i][j].getDirtLevel() > 0)
+        std::cout << cells[i][j].getDirtLevel();
+      else
+        std::cout << " ";
+    }
+    std::cout << std::endl;
   }
 }
 /*

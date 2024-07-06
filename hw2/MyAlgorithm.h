@@ -1,12 +1,15 @@
-#ifndef MYALGORITHM_H
-#define MYALGORITHM_H
-#include <AbstractAlgorithm.h>
+#ifndef MYALGO_H
+#define MYALGO_H
+#include "AbstractAlgorithm.h"
+#include "AlgorithmGraph.h"
+#include <memory>
 
-class MyAlgorithm : public AbstractAlgorithm {
-  const u_int32_t battery_max_size = 0;
-  std::unique_ptr<const WallsSensor> wallSensor;
-  std::unique_ptr<const BatteryMeter> batteryMeter;
-  std::unique_ptr<const DirtSensor> dirtSensor;
+class MyAlgorithm : public AbstractAlgorithm,
+                    public std::enable_shared_from_this<MyAlgorithm> {
+  u_int32_t battery_max_size = 0;
+  const WallsSensor *wallSensor;
+  const BatteryMeter *batteryMeter;
+  const DirtSensor *dirtSensor;
   AlgorithmGraph houseGraph;
   size_t cur_steps_left = 0;
 
@@ -19,10 +22,10 @@ class MyAlgorithm : public AbstractAlgorithm {
 public:
   MyAlgorithm();
   ~MyAlgorithm() {};
-  void setMaxSteps(std::size_t maxSteps) = 0;
-  void setWallsSensor(const WallsSensor &) = 0;
-  void setDirtSensor(const DirtSensor &) = 0;
-  void setBatteryMeter(const BatteryMeter &) = 0;
-  Step nextStep() = 0;
+  void setMaxSteps(std::size_t maxSteps);
+  void setWallsSensor(const WallsSensor &);
+  void setDirtSensor(const DirtSensor &);
+  void setBatteryMeter(const BatteryMeter &);
+  Step nextStep();
 };
 #endif

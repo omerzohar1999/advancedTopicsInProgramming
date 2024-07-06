@@ -1,5 +1,7 @@
-#include "House.h"
+#include "MyAlgorithm.h"
+#include "MySimulator.h"
 #include <iostream>
+#include <memory>
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -7,7 +9,8 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   std::string input = argv[1];
-  MySimulator house = MySimulator(input);
-
-  return !(house.run() && house.createOutput(input));
+  auto house = std::make_shared<MySimulator>(input);
+  MyAlgorithm robot = MyAlgorithm();
+  house->setAlgorithm(robot);
+  return !(house->run() && house->createOutput(input));
 }

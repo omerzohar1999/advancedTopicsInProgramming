@@ -1,9 +1,7 @@
-#ifndef VACUUMCLEANER_H
-#define VACUUMCLEANER_H
+#ifndef ABSTRACTALGO_H
+#define ABSTRACTALGO_H
 
-#include "AlgorithmGraph.h"
 #include "Direction.h"
-#include "House.h"
 #include "Sensors.h"
 #include <functional>
 

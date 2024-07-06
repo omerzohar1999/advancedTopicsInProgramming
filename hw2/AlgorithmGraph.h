@@ -1,5 +1,5 @@
-#ifndef VACUUMGRAPH_H
-#define VACUUMGRAPH_H
+#ifndef ALGOGRAPH_H
+#define ALGOGRAPH_H
 
 #include "Direction.h"
 #include "Sensors.h"
@@ -11,9 +11,6 @@
 static u_int32_t vaccumGraphCellID = 0;
 
 class VaccumGraphCell {
-  std::map<Direction, VaccumGraphCell *> neighbors[4];
-  int loc_i;
-  int loc_j;
   bool was_visited = false;
   bool is_docking = false;
   size_t dirt = 0;
@@ -26,11 +23,7 @@ public:
   bool getIsDirty() const;
   void setDocking();
   void setVisited();
-  void addNeighbor(Direction dir, VaccumGraphCell *neighbor);
-  int getLocI() const;
-  int getLocJ() const;
   u_int32_t getID() const;
-  VaccumGraphCell *getNeighborInDirection(Direction dir);
   void decreaseDirt();
   void setDirt(size_t dirt);
 };
@@ -43,12 +36,13 @@ class AlgorithmGraph {
   int curr_j = 0;
   int num_cells = 0;
 
+  bool cellExists(int loc_i, int loc_j) const;
+
 public:
   AlgorithmGraph();
 
   void visit(size_t dirt, bool wallInNorth, bool wallInEast, bool wallInSouth,
              bool wallInWest);
-  VaccumGraphCell getCellInCoordinates(int loc_i, int loc_j);
   std::pair<int, Direction>
   bfs(const std::function<bool(const VaccumGraphCell &)> &condition) const;
   std::pair<int, Direction> dockingDir();
