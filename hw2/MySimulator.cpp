@@ -256,10 +256,10 @@ bool MySimulator::robotDied() const {
 }
 
 std::string MySimulator::statusString() const {
-  if (battery_current_size < 1)
-    return "DEAD";
-  if (cleaningFinished())
+  if (stepsList[stepsList.size() - 1] == Step::Finish)
     return "FINISHED";
+  if (robotDied())
+    return "DEAD";
   return "WORKING";
 }
 
@@ -314,8 +314,13 @@ bool MySimulator::changeState() {
 
   stepsList.push_back(decision);
 
-  if (decision == Step::Finish)
+  if (decision == Step::Finish) {
+    // in the case Finish was returned,
+    // we want to validate that the cleaning finished successfully.
+    if (!cleaningFinished())
+      error = true;
     return true;
+  }
 
   std::cout << "step was not finish" << std::endl;
 
