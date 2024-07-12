@@ -1,8 +1,7 @@
 #ifndef ALGOGRAPH_H
 #define ALGOGRAPH_H
 
-#include "Direction.h"
-#include "Sensors.h"
+#include "enums.h"
 #include <functional>
 #include <map>
 #include <queue>

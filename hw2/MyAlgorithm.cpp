@@ -1,6 +1,6 @@
 #include "MyAlgorithm.h"
 #include "AlgorithmGraph.h"
-#include "Direction.h"
+#include "enums.h"
 #include <iostream>
 #include <memory>
 

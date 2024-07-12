@@ -8,11 +8,11 @@
 #include <string>
 #include <vector>
 
-#include "AbstractAlgorithm.h"
 #include "DevTools.h"
-#include "Direction.h"
 #include "MySensors.h"
 #include "MySimulator.h"
+#include "abstract_algorithm.h"
+#include "enums.h"
 
 HouseCell::HouseCell() {};
 
@@ -386,7 +386,12 @@ bool MySimulator::createOutput(std::string input_file) const {
       return false;
     }
 
-    file << "NumSteps = " << stepsList.size() << std::endl;
+    size_t steps = stepsList.size();
+    if (steps > 0 && stepsList[steps - 1] == Step::Finish) {
+      steps--;
+    }
+
+    file << "NumSteps = " << steps << std::endl;
     file << "DirtLeft = " << getDirtLeft() << std::endl;
     file << "Status = " << statusString() << std::endl;
     file << "Steps:" << std::endl;

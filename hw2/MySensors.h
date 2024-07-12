@@ -1,8 +1,10 @@
 #ifndef MYSENSORS_H
 #define MYSENSORS_H
 
-#include "Sensors.h"
 #include "Simulator.h"
+#include "battery_meter.h"
+#include "dirt_sensor.h"
+#include "wall_sensor.h"
 
 class MyWallsSensor : public WallsSensor {
   const Simulator *sim;

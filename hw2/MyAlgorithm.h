@@ -1,7 +1,7 @@
 #ifndef MYALGO_H
 #define MYALGO_H
-#include "AbstractAlgorithm.h"
 #include "AlgorithmGraph.h"
+#include "abstract_algorithm.h"
 #include <memory>
 
 class MyAlgorithm : public AbstractAlgorithm,

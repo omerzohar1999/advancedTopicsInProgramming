@@ -1,10 +1,10 @@
 #ifndef MYSIM_H
 #define MYSIM_H
 #include "DevTools.h"
-#include "Direction.h"
 #include "MyAlgorithm.h"
 #include "MySensors.h"
 #include "Simulator.h"
+#include "enums.h"
 #include <filesystem>
 #include <map>
 #include <string>

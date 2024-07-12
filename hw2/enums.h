@@ -1,5 +1,5 @@
-#ifndef DIRECTION_H
-#define DIRECTION_H
+#ifndef ROBOT_ENUMS_H_
+#define ROBOT_ENUMS_H_
 
 #include <string>
 
@@ -149,4 +149,4 @@ inline u_int32_t locJByDirection(u_int32_t j, Direction dir) {
   }
 }
 
-#endif
+#endif // ROBOT_ENUMS_H_
