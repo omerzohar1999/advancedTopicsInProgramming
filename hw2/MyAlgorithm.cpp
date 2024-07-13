@@ -1,6 +1,7 @@
 #include "MyAlgorithm.h"
 #include "AlgorithmGraph.h"
 #include "enums.h"
+#include "enums_utils.h"
 #include <iostream>
 #include <memory>
 
@@ -39,7 +40,6 @@ void MyAlgorithm::setDirtSensor(const DirtSensor &dirtSensor) {
 };
 void MyAlgorithm::setBatteryMeter(const BatteryMeter &batteryMeter) {
   this->batteryMeter = &batteryMeter;
-  this->battery_max_size = batteryMeter.getBatteryState();
 };
 
 Step MyAlgorithm::nextStep() {

@@ -13,6 +13,7 @@
 #include "MySimulator.h"
 #include "abstract_algorithm.h"
 #include "enums.h"
+#include "enums_utils.h"
 
 HouseCell::HouseCell() {};
 
@@ -346,9 +347,9 @@ void MySimulator::setAlgorithm(AbstractAlgorithm &algo) {
   robot = &algo;
   robot->setMaxSteps(max_steps);
 
-  batteryMeter.setHouse(*this);
-  wallsSensor.setHouse(*this);
-  dirtSensor.setHouse(*this);
+  batteryMeter.setHouse(weak_from_this());
+  wallsSensor.setHouse(weak_from_this());
+  dirtSensor.setHouse(weak_from_this());
 
   robot->setBatteryMeter(std::move(batteryMeter));
   robot->setWallsSensor(std::move(wallsSensor));

@@ -4,15 +4,17 @@
 
 MyBatteryMeter::MyBatteryMeter(MyBatteryMeter &m) { this->sim = m.sim; }
 
-void MyBatteryMeter::setHouse(const Simulator &house) { this->sim = &house; };
+void MyBatteryMeter::setHouse(std::weak_ptr<Simulator> sim) {
+  this->sim = sim;
+};
 MyWallsSensor::MyWallsSensor(MyWallsSensor &s) { this->sim = s.sim; }
-void MyWallsSensor::setHouse(const Simulator &house) { this->sim = &house; };
+void MyWallsSensor::setHouse(std::weak_ptr<Simulator> sim) { this->sim = sim; };
 MyDirtSensor::MyDirtSensor(MyDirtSensor &s) { this->sim = s.sim; }
-void MyDirtSensor::setHouse(const Simulator &house) { this->sim = &house; };
+void MyDirtSensor::setHouse(std::weak_ptr<Simulator> sim) { this->sim = sim; };
 std::size_t MyBatteryMeter::getBatteryState() const {
-  return sim->getBatteryLeft();
+  return sim.lock()->getBatteryLeft();
 };
 bool MyWallsSensor::isWall(Direction dir) const {
-  return sim->isThereWall(dir);
+  return sim.lock()->isThereWall(dir);
 };
-int MyDirtSensor::dirtLevel() const { return sim->howMuchDirtHere(); };
+int MyDirtSensor::dirtLevel() const { return sim.lock()->howMuchDirtHere(); };

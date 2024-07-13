@@ -24,7 +24,8 @@ public:
   bool getIsWall() const;
 };
 
-class MySimulator : public Simulator {
+class MySimulator : public Simulator,
+                    public std::enable_shared_from_this<MySimulator> {
   std::vector<std::vector<HouseCell>> cells;
   MyBatteryMeter batteryMeter;
   MyWallsSensor wallsSensor;

@@ -5,37 +5,38 @@
 #include "battery_meter.h"
 #include "dirt_sensor.h"
 #include "wall_sensor.h"
+#include <memory>
 
 class MyWallsSensor : public WallsSensor {
-  const Simulator *sim;
+  std::weak_ptr<Simulator> sim;
 
 public:
   MyWallsSensor() {};
   MyWallsSensor(MyWallsSensor &s);
   ~MyWallsSensor() {};
-  void setHouse(const Simulator &sim);
+  void setHouse(std::weak_ptr<Simulator> sim);
   bool isWall(Direction d) const;
 };
 
 class MyDirtSensor : public DirtSensor {
-  const Simulator *sim;
+  std::weak_ptr<Simulator> sim;
 
 public:
   MyDirtSensor() {};
   MyDirtSensor(MyDirtSensor &s);
   ~MyDirtSensor() {};
-  void setHouse(const Simulator &sim);
+  void setHouse(std::weak_ptr<Simulator> sim);
   int dirtLevel() const;
 };
 
 class MyBatteryMeter : public BatteryMeter {
-  const Simulator *sim;
+  std::weak_ptr<Simulator> sim;
 
 public:
   MyBatteryMeter() {};
   MyBatteryMeter(MyBatteryMeter &m);
   ~MyBatteryMeter() {};
-  void setHouse(const Simulator &sim);
+  void setHouse(std::weak_ptr<Simulator> sim);
   std::size_t getBatteryState() const;
 };
 #endif

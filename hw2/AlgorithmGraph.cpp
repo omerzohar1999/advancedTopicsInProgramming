@@ -1,5 +1,6 @@
 #include "AlgorithmGraph.h"
 #include "abstract_algorithm.h"
+#include "enums_utils.h"
 #include <iostream>
 
 VaccumGraphCell::VaccumGraphCell() {}
