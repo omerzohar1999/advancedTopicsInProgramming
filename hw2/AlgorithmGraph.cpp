@@ -209,7 +209,7 @@ void AlgorithmGraph::decreaseDirt() {
 }
 
 void AlgorithmGraph::updateCurrent(Step dir) {
-  if (dir != Step::Stay && dir != Step::Finish) {
+  if (!isStationaryStep(dir)) {
     curr_i = locIByDirection(curr_i, stepToDir(dir));
     curr_j = locJByDirection(curr_j, stepToDir(dir));
   } else if (dir == Step::Stay)

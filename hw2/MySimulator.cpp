@@ -14,6 +14,7 @@
 #include "abstract_algorithm.h"
 #include "enums.h"
 #include "enums_utils.h"
+#include <exception>
 
 HouseCell::HouseCell() {};
 
@@ -56,26 +57,35 @@ MySimulator::MySimulator(std::string file_name) {
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     if (item != "MaxSteps") {
-      // TODO: error
+      error = true;
+      return;
     }
     std::getline(ss, item);
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-    // TODO: check the following value is indeed integer
-    this->max_steps = std::stoi(item);
-
+    try {
+      this->max_steps = std::stoi(item);
+    } catch (int errnum) {
+      error = true;
+      return;
+    }
     std::getline(file, line);
     ss = std::stringstream(line);
 
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     if (item != "MaxBattery") {
-      // TODO: error
+      error = true;
+      return;
     }
 
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-    // TODO: check the following value is indeed integer
-    battery_max_size = std::stoi(item);
+    try {
+      battery_max_size = std::stoi(item);
+    } catch (int errnum) {
+      error = true;
+      return;
+    }
     battery_current_size = battery_max_size;
 
     std::getline(file, line);
@@ -84,27 +94,36 @@ MySimulator::MySimulator(std::string file_name) {
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     if (item != "Rows") {
-      // TODO: error
+      error = true;
+      return;
     }
 
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-    // TODO: check the following value is indeed integer
-    house_size_rows = std::stoi(item);
-
+    try {
+      house_size_rows = std::stoi(item);
+    } catch (int errnum) {
+      error = true;
+      return;
+    }
     std::getline(file, line);
     ss = std::stringstream(line);
 
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
     if (item != "Cols") {
-      // TODO: error
+      error = true;
+      return;
     }
 
     std::getline(ss, item, '=');
     item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-    // TODO: check the following value is indeed integer
-    house_size_cols = std::stoi(item);
+    try {
+      house_size_cols = std::stoi(item);
+    } catch (int errnum) {
+      error = true;
+      return;
+    }
 
     std::cout << "house size is (" << house_size_rows << "," << house_size_cols
               << ")" << std::endl;
@@ -129,10 +148,6 @@ MySimulator::MySimulator(std::string file_name) {
       while (ptr_j <= house_size_cols && ptr_j <= (int)line.size()) {
         // switch by value of cell
         switch (line[ptr_j - 1]) {
-        case ' ':
-          break;
-        case '0':
-          break;
         case '1':
           cells[ptr_i][ptr_j].setDirtLevel(1);
           break;
@@ -162,9 +177,9 @@ MySimulator::MySimulator(std::string file_name) {
           break;
         case 'D':
           if (robot_loc_i != -1) {
-            // error
+            error = true;
+            return;
           }
-          cells[ptr_i][ptr_j].setDirtLevel(0);
           robot_loc_i = ptr_i;
           robot_loc_j = ptr_j;
           docking_loc_i = ptr_i;
@@ -174,13 +189,16 @@ MySimulator::MySimulator(std::string file_name) {
           cells[ptr_i][ptr_j].setDirtLevel(0);
           cells[ptr_i][ptr_j].setWall();
           break;
+        default:
+          break;
         }
         ptr_j++;
       }
       ptr_i++;
     }
     if (robot_loc_i == -1) {
-      // TODO: error
+      error = true;
+      return;
     }
 
     printHouse();
@@ -269,7 +287,7 @@ bool MySimulator::end() const {
 }
 
 void MySimulator::updateRobotLocation(Step decision) {
-  if (decision != Step::Stay && decision != Step::Finish) {
+  if (!isStationaryStep(decision)) {
     robot_loc_i = locIByDirection(robot_loc_i, stepToDir(decision));
     robot_loc_j = locJByDirection(robot_loc_j, stepToDir(decision));
   }
@@ -338,7 +356,7 @@ bool MySimulator::changeState() {
 
   printHouse();
 
-  // updateVisualization(decision);  TODO
+  updateVisualization(decision);
 
   return end();
 }
@@ -429,67 +447,40 @@ void MySimulator::printHouse() {
     std::cout << std::endl;
   }
 }
-/*
+
 void MySimulator::updateVisualization(Step decision) {
-  if (!devTools->isVisualizationEnabled())
+  if (!devTools.isVisualizationEnabled())
     return;
 
   try {
-    std::string file_name = devTools->getVisualizationFileName();
+    std::string file_name = devTools.getVisualizationFileName();
     std::ofstream outFile(file_name, std::ios::app);
     if (!outFile) {
       std::cerr << "Error opening file for writing." << std::endl;
       return;
     }
 
+    std::cout << "writing to file: " << file_name << std::endl;
+
     // Write the direction
     outFile << stepString(decision) << std::endl;
     outFile << std::endl; // Empty line
 
-    // Convert cells to ASCII table
-    size_t rows = cells.size();
-    size_t cols = rows > 0 ? cells[0].size() : 0;
-
-    for (size_t i = 0; i < rows; ++i) {
-      // Top walls
-      for (size_t j = 0; j < cols; ++j) {
-        if (cells[i][j].isWallInDirection(Direction::North)) {
-          outFile << "+---";
-        } else {
-          outFile << "+   ";
-        }
-      }
-      outFile << "+" << std::endl;
-
-      // Side walls and dirt level
-      for (size_t j = 0; j < cols; ++j) {
-        if (cells[i][j]->isWallInDirection(Direction::West)) {
-          outFile << "|";
-        } else {
-          outFile << " ";
-        }
-        outFile << " ";
-        if (i == robot_loc_i && j == robot_loc_j) {
-          outFile << "V";
-        } else if (i == docking_loc_i && j == docking_loc_j) {
+    for (size_t i = 0; i < cells.size(); i++) {
+      for (size_t j = 0; j < cells[i].size(); j++) {
+        if (cells[i][j].getIsWall())
+          outFile << "W";
+        else if (i == (size_t)robot_loc_i && j == (size_t)robot_loc_j)
+          outFile << "R";
+        else if (i == (size_t)docking_loc_i && j == (size_t)docking_loc_j)
           outFile << "D";
-        } else {
-          outFile << cells[i][j]->getDirtLevel();
-        }
-        outFile << " ";
+        else if (cells[i][j].getDirtLevel() > 0)
+          outFile << cells[i][j].getDirtLevel();
+        else
+          outFile << " ";
       }
-      outFile << "|" << std::endl;
+      outFile << std::endl;
     }
-
-    // Bottom walls
-    for (size_t j = 0; j < cols; ++j) {
-      if (cells[rows - 1][j]->isWallInDirection(Direction::South)) {
-        outFile << "+---";
-      } else {
-        outFile << "+   ";
-      }
-    }
-    outFile << "+" << std::endl;
     outFile << std::endl; // Empty line
     outFile.close();
   } catch (const std::ofstream::failure &e) {
@@ -498,7 +489,7 @@ void MySimulator::updateVisualization(Step decision) {
     std::cerr << "Exception: " << e.what() << std::endl;
   }
 }
-*/
+
 std::filesystem::path
 MySimulator::addPrefixToFilePath(const std::filesystem::path &file_path,
                                  const std::string &prefix) const {

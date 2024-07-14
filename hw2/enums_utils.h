@@ -8,6 +8,7 @@ inline bool isStationaryStep(Step s) {
 }
 
 inline Direction stepToDir(Step step) {
+  // precondition: step is not stationary
   switch (step) {
   case Step::North:
     return Direction::North;
@@ -22,7 +23,7 @@ inline Direction stepToDir(Step step) {
     return Direction::West;
     break;
   default:
-    throw; // TODO
+    return Direction::North; // should never get here
   }
 }
 

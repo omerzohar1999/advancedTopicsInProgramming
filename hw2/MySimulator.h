@@ -31,7 +31,7 @@ class MySimulator : public Simulator,
   MyWallsSensor wallsSensor;
   MyDirtSensor dirtSensor;
   AbstractAlgorithm *robot;
-  std::shared_ptr<DevTools> devTools;
+  DevTools devTools;
   int32_t robot_loc_i = -1;
   int32_t robot_loc_j = -1;
   int32_t docking_loc_i = -1;
@@ -59,7 +59,7 @@ class MySimulator : public Simulator,
   bool isCharging(Step decision) const;
   bool isBadStep(Step decision) const;
   bool changeState();
-  // void updateVisualization(Step decision); TODO
+  void updateVisualization(Step decision);
   std::filesystem::path
   addPrefixToFilePath(const std::filesystem::path &file_path,
                       const std::string &prefix) const;
