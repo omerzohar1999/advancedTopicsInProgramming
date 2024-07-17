@@ -218,21 +218,23 @@ bool MySimulator::isThereWall(Direction dir) const {
             << std::endl;
   std::cout << "move direction: " << directionString(dir) << std::endl;
   switch (dir) {
-  case Direction::North:
-    return robot_loc_i <= 1 || cells[robot_loc_i - 1][robot_loc_j].getIsWall();
-    break;
-  case Direction::East:
-    return robot_loc_j >= house_size_cols ||
-           cells[robot_loc_i][robot_loc_j + 1].getIsWall();
-    break;
-  case Direction::South:
-    return robot_loc_i >= house_size_rows ||
-           cells[robot_loc_i + 1][robot_loc_j].getIsWall();
-    break;
-  case Direction::West:
-    return robot_loc_j <= 1 || cells[robot_loc_i][robot_loc_j - 1].getIsWall();
-    break;
-  }
+      case Direction::North:
+        return robot_loc_i <= 1 || cells[robot_loc_i - 1][robot_loc_j].getIsWall();
+        break;
+      case Direction::East:
+        return robot_loc_j >= house_size_cols ||
+               cells[robot_loc_i][robot_loc_j + 1].getIsWall();
+        break;
+      case Direction::South:
+        return robot_loc_i >= house_size_rows ||
+               cells[robot_loc_i + 1][robot_loc_j].getIsWall();
+        break;
+      case Direction::West:
+        return robot_loc_j <= 1 || cells[robot_loc_i][robot_loc_j - 1].getIsWall();
+        break;
+      default:
+          return true;
+      }
 }
 
 int MySimulator::howMuchDirtHere() const {

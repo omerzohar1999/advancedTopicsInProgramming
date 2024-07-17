@@ -29,18 +29,19 @@ inline Direction stepToDir(Step step) {
 
 inline Step dirToStep(Direction dir) {
   switch (dir) {
-  case Direction::North:
-    return Step::North;
-    break;
-  case Direction::East:
-    return Step::East;
-    break;
-  case Direction::South:
-    return Step::South;
-    break;
-  case Direction::West:
-    return Step::West;
-    break;
+      case Direction::North:
+        return Step::North;
+        break;
+      case Direction::East:
+        return Step::East;
+        break;
+      case Direction::South:
+        return Step::South;
+        break;
+      case Direction::West:
+        return Step::West;
+      default:
+          return Step::Finish;
   }
 }
 
@@ -61,14 +62,16 @@ inline Step oppositeDirection(Step dir) {
 
 inline Direction oppositeDirection(Direction dir) {
   switch (dir) {
-  case Direction::North:
-    return Direction::South;
-  case Direction::East:
-    return Direction::West;
-  case Direction::South:
-    return Direction::North;
-  case Direction::West:
-    return Direction::East;
+      case Direction::North:
+        return Direction::South;
+      case Direction::East:
+        return Direction::West;
+      case Direction::South:
+        return Direction::North;
+      case Direction::West:
+        return Direction::East;
+      default:
+          return dir;
   }
 }
 
