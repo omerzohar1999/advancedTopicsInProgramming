@@ -9,8 +9,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     std::string input = argv[1];
-    auto house = std::make_shared<MySimulator>(input);
-    MyAlgorithm robot = MyAlgorithm();
-    house->setAlgorithm(robot);
-    return !(house->run() && house->createOutput(input));
+    auto house = std::make_shared<MySimulator>();
+    bool read_error = house->readHouseFile(input);
+    if (read_error)
+        return 1;
+    MyAlgorithm algo;
+    house->setAlgorithm(algo);
+    bool run_error = house->run();
+    bool output_error = house->createOutput(input);
+    return (run_error || output_error);
 }

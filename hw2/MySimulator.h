@@ -65,12 +65,13 @@ class MySimulator : public Simulator,
                         const std::string &prefix) const;
 
 public:
-    MySimulator(std::string file_name);
+    MySimulator();
     bool isThereWall(Direction dir) const;
     int howMuchDirtHere() const;
     int getBatteryLeft() const;
     void setAlgorithm(AbstractAlgorithm &algo);
     bool run();
     bool createOutput(std::string input_file) const;
+    bool readHouseFile(std::string file_name);
 };
 #endif

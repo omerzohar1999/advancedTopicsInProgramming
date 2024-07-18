@@ -30,186 +30,7 @@ void HouseCell::setWall() { is_wall = true; }
 
 bool HouseCell::getIsWall() const { return is_wall; }
 
-MySimulator::MySimulator(std::string file_name) {
-    try {
-        std::filesystem::path file_path(file_name);
-
-        // Check if the path is relative or absolute
-        if (!file_path.is_absolute()) {
-            // Resolve relative path
-            file_path = std::filesystem::absolute(file_path);
-        }
-
-        std::ifstream file(file_path.string());
-        if (!file.is_open()) {
-            std::cerr << "Unable to open file: " << file_path << std::endl;
-            error = true;
-            return;
-        }
-
-        std::string line;
-        std::getline(file, line); // first line is name: ignore
-        std::getline(file, line);
-
-        std::stringstream ss(line);
-        std::string item;
-
-        std::getline(ss, item, '=');
-        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-        if (item != "MaxSteps") {
-            error = true;
-            return;
-        }
-        std::getline(ss, item);
-        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-        try {
-            this->max_steps = std::stoi(item);
-        } catch (int errnum) {
-            error = true;
-            return;
-        }
-        std::getline(file, line);
-        ss = std::stringstream(line);
-
-        std::getline(ss, item, '=');
-        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-        if (item != "MaxBattery") {
-            error = true;
-            return;
-        }
-
-        std::getline(ss, item, '=');
-        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-        try {
-            battery_max_size = std::stoi(item);
-        } catch (int errnum) {
-            error = true;
-            return;
-        }
-        battery_current_size = battery_max_size;
-
-        std::getline(file, line);
-        ss = std::stringstream(line);
-
-        std::getline(ss, item, '=');
-        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-        if (item != "Rows") {
-            error = true;
-            return;
-        }
-
-        std::getline(ss, item, '=');
-        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-        try {
-            house_size_rows = std::stoi(item);
-        } catch (int errnum) {
-            error = true;
-            return;
-        }
-        std::getline(file, line);
-        ss = std::stringstream(line);
-
-        std::getline(ss, item, '=');
-        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-        if (item != "Cols") {
-            error = true;
-            return;
-        }
-
-        std::getline(ss, item, '=');
-        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-        try {
-            house_size_cols = std::stoi(item);
-        } catch (int errnum) {
-            error = true;
-            return;
-        }
-
-        std::cout << "house size is (" << house_size_rows << "," << house_size_cols
-                  << ")" << std::endl;
-
-        cells.resize(house_size_rows + 2);
-        std::cout << "including outer walls, numOfRows:" << cells.size()
-                  << std::endl;
-        for (size_t i = 0; i < cells.size(); i++) {
-            cells[i].resize(house_size_cols + 2);
-            cells[i][0].setWall();
-            cells[i][cells[i].size() - 1].setWall();
-            if (i == 0 || i == cells.size() - 1) {
-                for (size_t j = 1; j < cells[i].size() - 1; j++) {
-                    cells[i][j].setWall();
-                }
-            }
-        }
-        int ptr_i = 1;
-
-        while (ptr_i <= house_size_rows && std::getline(file, line)) {
-            int ptr_j = 1;
-            while (ptr_j <= house_size_cols && ptr_j <= (int)line.size()) {
-                // switch by value of cell
-                switch (line[ptr_j - 1]) {
-                    case '1':
-                        cells[ptr_i][ptr_j].setDirtLevel(1);
-                        break;
-                    case '2':
-                        cells[ptr_i][ptr_j].setDirtLevel(2);
-                        break;
-                    case '3':
-                        cells[ptr_i][ptr_j].setDirtLevel(3);
-                        break;
-                    case '4':
-                        cells[ptr_i][ptr_j].setDirtLevel(4);
-                        break;
-                    case '5':
-                        cells[ptr_i][ptr_j].setDirtLevel(5);
-                        break;
-                    case '6':
-                        cells[ptr_i][ptr_j].setDirtLevel(6);
-                        break;
-                    case '7':
-                        cells[ptr_i][ptr_j].setDirtLevel(7);
-                        break;
-                    case '8':
-                        cells[ptr_i][ptr_j].setDirtLevel(8);
-                        break;
-                    case '9':
-                        cells[ptr_i][ptr_j].setDirtLevel(9);
-                        break;
-                    case 'D':
-                        if (robot_loc_i != -1) {
-                            error = true;
-                            return;
-                        }
-                        robot_loc_i = ptr_i;
-                        robot_loc_j = ptr_j;
-                        docking_loc_i = ptr_i;
-                        docking_loc_j = ptr_j;
-                        break;
-                    case 'W':
-                        cells[ptr_i][ptr_j].setDirtLevel(0);
-                        cells[ptr_i][ptr_j].setWall();
-                        break;
-                    default:
-                        break;
-                }
-                ptr_j++;
-            }
-            ptr_i++;
-        }
-        if (robot_loc_i == -1) {
-            error = true;
-            return;
-        }
-
-        printHouse();
-
-    } catch (const std::ifstream::failure &e) {
-        std::cerr << "Exception opening/reading file: " << e.what() << std::endl;
-        error = true;
-    } catch (const std::exception &e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
-        error = true;
-    }
+MySimulator::MySimulator() {
 }
 
 bool MySimulator::isThereWall(Direction dir) const {
@@ -277,8 +98,9 @@ bool MySimulator::robotDied() const {
 }
 
 std::string MySimulator::statusString() const {
-    if (stepsList[stepsList.size() - 1] == Step::Finish)
-        return "FINISHED";
+    if (stepsList.size() >= 1 &&
+    stepsList[stepsList.size() - 1] == Step::Finish)
+            return "FINISHED";
     if (robotDied())
         return "DEAD";
     return "WORKING";
@@ -382,7 +204,7 @@ bool MySimulator::run() {
 
     while (!error && !changeState()) {
     }
-    return !error;
+    return error;
 }
 
 bool MySimulator::createOutput(std::string input_file) const {
@@ -404,7 +226,7 @@ bool MySimulator::createOutput(std::string input_file) const {
         std::ofstream file(output_file_path.string());
         if (!file.is_open()) {
             std::cerr << "Unable to open file: " << input_file << std::endl;
-            return false;
+            return true;
         }
 
         size_t steps = stepsList.size();
@@ -421,7 +243,7 @@ bool MySimulator::createOutput(std::string input_file) const {
         }
 
         file.close();
-        return true;
+        return false;
 
     } catch (const std::ofstream::failure &e) {
         std::cerr << "Exception writing to output file: " << e.what() << std::endl;
@@ -431,6 +253,194 @@ bool MySimulator::createOutput(std::string input_file) const {
         return false;
     }
 }
+
+bool MySimulator::readHouseFile(std::string file_name) {
+    try {
+        std::filesystem::path file_path(file_name);
+
+        // Check if the path is relative or absolute
+        if (!file_path.is_absolute()) {
+            // Resolve relative path
+            file_path = std::filesystem::absolute(file_path);
+        }
+
+        std::ifstream file(file_path.string());
+        if (!file.is_open()) {
+            std::cerr << "Unable to open file: " << file_path << std::endl;
+            error = true;
+            return error;
+        }
+
+        std::string line;
+        std::getline(file, line); // first line is name: ignore
+        std::getline(file, line);
+
+        std::stringstream ss(line);
+        std::string item;
+
+        std::getline(ss, item, '=');
+        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+        if (item != "MaxSteps") {
+            error = true;
+            return error;
+        }
+        std::getline(ss, item);
+        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+        try {
+            this->max_steps = std::stoi(item);
+        } catch (int errnum) {
+            error = true;
+            return error;
+        }
+        std::getline(file, line);
+        ss = std::stringstream(line);
+
+        std::getline(ss, item, '=');
+        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+        if (item != "MaxBattery") {
+            error = true;
+            return error;
+        }
+
+        std::getline(ss, item, '=');
+        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+        try {
+            battery_max_size = std::stoi(item);
+        } catch (int errnum) {
+            error = true;
+            return error;
+        }
+        battery_current_size = battery_max_size;
+
+        std::getline(file, line);
+        ss = std::stringstream(line);
+
+        std::getline(ss, item, '=');
+        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+        if (item != "Rows") {
+            error = true;
+            return error;
+        }
+
+        std::getline(ss, item, '=');
+        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+        try {
+            house_size_rows = std::stoi(item);
+        } catch (int errnum) {
+            error = true;
+            return error;
+        }
+        std::getline(file, line);
+        ss = std::stringstream(line);
+
+        std::getline(ss, item, '=');
+        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+        if (item != "Cols") {
+            error = true;
+            return error;
+        }
+
+        std::getline(ss, item, '=');
+        item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+        try {
+            house_size_cols = std::stoi(item);
+        } catch (int errnum) {
+            error = true;
+            return error;
+        }
+
+        std::cout << "house size is (" << house_size_rows << "," << house_size_cols
+                  << ")" << std::endl;
+
+        cells.resize(house_size_rows + 2);
+        std::cout << "including outer walls, numOfRows:" << cells.size()
+                  << std::endl;
+        for (size_t i = 0; i < cells.size(); i++) {
+            cells[i].resize(house_size_cols + 2);
+            cells[i][0].setWall();
+            cells[i][cells[i].size() - 1].setWall();
+            if (i == 0 || i == cells.size() - 1) {
+                for (size_t j = 1; j < cells[i].size() - 1; j++) {
+                    cells[i][j].setWall();
+                }
+            }
+        }
+        int ptr_i = 1;
+
+        while (ptr_i <= house_size_rows && std::getline(file, line)) {
+            int ptr_j = 1;
+            while (ptr_j <= house_size_cols && ptr_j <= (int)line.size()) {
+                // switch by value of cell
+                switch (line[ptr_j - 1]) {
+                    case '1':
+                        cells[ptr_i][ptr_j].setDirtLevel(1);
+                        break;
+                    case '2':
+                        cells[ptr_i][ptr_j].setDirtLevel(2);
+                        break;
+                    case '3':
+                        cells[ptr_i][ptr_j].setDirtLevel(3);
+                        break;
+                    case '4':
+                        cells[ptr_i][ptr_j].setDirtLevel(4);
+                        break;
+                    case '5':
+                        cells[ptr_i][ptr_j].setDirtLevel(5);
+                        break;
+                    case '6':
+                        cells[ptr_i][ptr_j].setDirtLevel(6);
+                        break;
+                    case '7':
+                        cells[ptr_i][ptr_j].setDirtLevel(7);
+                        break;
+                    case '8':
+                        cells[ptr_i][ptr_j].setDirtLevel(8);
+                        break;
+                    case '9':
+                        cells[ptr_i][ptr_j].setDirtLevel(9);
+                        break;
+                    case 'D':
+                        if (robot_loc_i != -1) {
+                            error = true;
+                            return error;
+                        }
+                        robot_loc_i = ptr_i;
+                        robot_loc_j = ptr_j;
+                        docking_loc_i = ptr_i;
+                        docking_loc_j = ptr_j;
+                        break;
+                    case 'W':
+                        cells[ptr_i][ptr_j].setDirtLevel(0);
+                        cells[ptr_i][ptr_j].setWall();
+                        break;
+                    default:
+                        break;
+                }
+                ptr_j++;
+            }
+            ptr_i++;
+        }
+        if (robot_loc_i == -1) {
+            error = true;
+            return error;
+        }
+
+        printHouse();
+        error = false;
+        return error;
+
+    } catch (const std::ifstream::failure &e) {
+        std::cerr << "Exception opening/reading file: " << e.what() << std::endl;
+        error = true;
+        return error;
+    } catch (const std::exception &e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+        error = true;
+        return error;
+    }
+
+}
+
 void MySimulator::printHouse() {
 
     for (size_t i = 0; i < cells.size(); i++) {

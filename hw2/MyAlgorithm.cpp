@@ -40,6 +40,7 @@ void MyAlgorithm::setDirtSensor(const DirtSensor &dirtSensor) {
 };
 void MyAlgorithm::setBatteryMeter(const BatteryMeter &batteryMeter) {
   this->batteryMeter = &batteryMeter;
+  this->battery_max_size = batteryMeter.getBatteryState();
 };
 
 Step MyAlgorithm::nextStep() {
@@ -63,7 +64,7 @@ Step MyAlgorithm::nextStep() {
   }
 
   if (mustGoCharge(dockingDistAndDir.first)) {
-    ret = dirToStep(dockingDistAndDir.second);
+      ret = dirToStep(dockingDistAndDir.second);
     goto end;
   }
 
@@ -78,12 +79,13 @@ Step MyAlgorithm::nextStep() {
         ret = Step::Stay;
       else
         ret = dirToStep(unvisitedDistAndDir.second);
-      /*if (isRunningOutOfStepsUnvisited()) {
-        if (houseGraph.isInDocking())
-          ret = Step::Stay;
-        else
-          ret = dirToStep(dockingDistAndDir.second);
-      }*/
+
+        /*if (isRunningOutOfStepsUnvisited()) {
+          if (houseGraph.isInDocking())
+            ret = Step::Stay;
+          else
+            ret = dirToStep(dockingDistAndDir.second);
+        }*/
       goto end;
     }
   }
@@ -91,12 +93,12 @@ Step MyAlgorithm::nextStep() {
   if (!(houseGraph.houseWasFullyCleaned())) {
     std::cout << "looking for a dirty cell" << std::endl;
     if (dirtyDistAndDir.first != -1) {
-      ret = dirToStep(dirtyDistAndDir.second);
-      if (isRunningOutOfStepsDirty()) {
-        if (houseGraph.isInDocking())
-          ret = Step::Stay;
-        else
-          ret = dirToStep(dockingDistAndDir.second);
+        ret = dirToStep(dirtyDistAndDir.second);
+        if (isRunningOutOfStepsDirty()) {
+            if (houseGraph.isInDocking())
+              ret = Step::Stay;
+            else
+              ret = dirToStep(dockingDistAndDir.second);
       } else if (dirtyDistAndDir.first == 0)
         ret = Step::Stay;
       goto end;
