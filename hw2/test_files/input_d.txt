@@ -1,0 +1,8 @@
+sanitycheck
+MaxSteps = 5000
+MaxBattery =   50
+Rows=3
+Cols= 2
+3D
+W1
+10
