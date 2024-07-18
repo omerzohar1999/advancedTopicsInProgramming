@@ -20,13 +20,16 @@ bool MyAlgorithm::mustGoCharge(int distFromDocking) const {
 }
 
 bool MyAlgorithm::isRunningOutOfStepsUnvisited() {
-  return houseGraph.dockingDir().first + houseGraph.unvisitedDir().first >=
-         (int)cur_steps_left;
+    int dockingDist = houseGraph.dockingBfs().first;
+    int unvisitedDist = houseGraph.unvisitedBfs().first;
+  return dockingDist + unvisitedDist >= (int)cur_steps_left;
 }
 
 bool MyAlgorithm::isRunningOutOfStepsDirty() {
-  return houseGraph.dockingDir().first + houseGraph.dirtyDir().first >=
-         (int)cur_steps_left;
+    int dockingDist = houseGraph.dockingBfs().first;
+    int dirtyDist = houseGraph.dirtyBfs().first;
+
+    return dockingDist + dirtyDist >= (int)cur_steps_left;
 }
 
 void MyAlgorithm::setMaxSteps(std::size_t maxSteps) {
@@ -44,14 +47,21 @@ void MyAlgorithm::setBatteryMeter(const BatteryMeter &batteryMeter) {
 };
 
 Step MyAlgorithm::nextStep() {
-  houseGraph.visit(
+    houseGraph.visit(
       dirtSensor->dirtLevel(), wallSensor->isWall(Direction::North),
       wallSensor->isWall(Direction::East), wallSensor->isWall(Direction::South),
       wallSensor->isWall(Direction::West));
-  auto dockingDistAndDir = houseGraph.dockingDir();
-  auto unvisitedDistAndDir = houseGraph.unvisitedDir();
-  auto dirtyDistAndDir = houseGraph.dirtyDir();
-
+      auto dockingDistAndDir = houseGraph.dockingBfs();
+      auto unvisitedDistAndDir = houseGraph.unvisitedBfs();
+      auto dirtyDistAndDir = houseGraph.dirtyBfs();
+      int dockingDist, unvisitedDist, dirtyDist;
+      Direction dockingDir, unvisitedDir, dirtyDir;
+      dockingDist = dockingDistAndDir.first;
+      dockingDir = dockingDistAndDir.second;
+    unvisitedDist = unvisitedDistAndDir.first;
+    unvisitedDir = unvisitedDistAndDir.second;
+    dirtyDist = dirtyDistAndDir.first;
+    dirtyDir = dirtyDistAndDir.second;
   Step ret = dirToStep(dockingDistAndDir.second);
 
   if (houseGraph.isInDocking() && houseGraph.houseWasFullyExplored() &&
@@ -63,22 +73,22 @@ Step MyAlgorithm::nextStep() {
     goto end;
   }
 
-  if (mustGoCharge(dockingDistAndDir.first)) {
-      ret = dirToStep(dockingDistAndDir.second);
+  if (mustGoCharge(dockingDist)) {
+      ret = dirToStep(dockingDir);
     goto end;
   }
 
   if (!(houseGraph.houseWasFullyExplored())) {
     std::cout << "looking for an unvisited cell" << std::endl;
-    if (unvisitedDistAndDir.first != -1) {
+    if (unvisitedDist != -1) {
       std::cout << "found one!" << std::endl;
-      std::cout << "distance is " << unvisitedDistAndDir.first << std::endl;
+      std::cout << "distance is " << unvisitedDist << std::endl;
       std::cout << "direction is "
-                << directionString(unvisitedDistAndDir.second) << std::endl;
-      if (unvisitedDistAndDir.first == 0)
+                << directionString(unvisitedDir) << std::endl;
+      if (unvisitedDist == 0)
         ret = Step::Stay;
       else
-        ret = dirToStep(unvisitedDistAndDir.second);
+        ret = dirToStep(unvisitedDir);
 
         /*if (isRunningOutOfStepsUnvisited()) {
           if (houseGraph.isInDocking())
@@ -92,20 +102,20 @@ Step MyAlgorithm::nextStep() {
 
   if (!(houseGraph.houseWasFullyCleaned())) {
     std::cout << "looking for a dirty cell" << std::endl;
-    if (dirtyDistAndDir.first != -1) {
-        ret = dirToStep(dirtyDistAndDir.second);
+    if (dirtyDist != -1) {
+        ret = dirToStep(dirtyDir);
         if (isRunningOutOfStepsDirty()) {
             if (houseGraph.isInDocking())
               ret = Step::Stay;
             else
-              ret = dirToStep(dockingDistAndDir.second);
-      } else if (dirtyDistAndDir.first == 0)
+              ret = dirToStep(dockingDir);
+      } else if (dockingDist == 0)
         ret = Step::Stay;
       goto end;
     }
   }
 
-  if (dockingDistAndDir.first == 0) {
+  if (dockingDist == 0) {
     // from robot POV, house cleaning is finished, and we're in docking.
     ret = Step::Finish;
   }

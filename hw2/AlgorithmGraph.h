@@ -44,9 +44,9 @@ public:
              bool wallInWest);
   std::pair<int, Direction>
   bfs(const std::function<bool(const VaccumGraphCell &)> &condition) const;
-  std::pair<int, Direction> dockingDir();
-  std::pair<int, Direction> unvisitedDir();
-  std::pair<int, Direction> dirtyDir();
+  std::pair<int, Direction> dockingBfs();
+  std::pair<int, Direction> unvisitedBfs();
+  std::pair<int, Direction> dirtyBfs();
   bool isInDocking() const;
   bool houseWasFullyExplored() const;
   bool houseWasFullyCleaned() const;

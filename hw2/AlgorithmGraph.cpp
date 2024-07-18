@@ -176,11 +176,11 @@ std::pair<int, Direction> AlgorithmGraph::bfs(
   return ret;
 }
 
-std::pair<int, Direction> AlgorithmGraph::dockingDir() {
+std::pair<int, Direction> AlgorithmGraph::dockingBfs() {
   return bfs(cellIsDockingCondition);
 }
 
-std::pair<int, Direction> AlgorithmGraph::unvisitedDir() {
+std::pair<int, Direction> AlgorithmGraph::unvisitedBfs() {
   std::pair<int, Direction> ret = bfs(cellWasntVisitedCondition);
   if (ret.first == -1) {
     finished_scanning = true;
@@ -189,7 +189,7 @@ std::pair<int, Direction> AlgorithmGraph::unvisitedDir() {
   return ret;
 }
 
-std::pair<int, Direction> AlgorithmGraph::dirtyDir() {
+std::pair<int, Direction> AlgorithmGraph::dirtyBfs() {
   std::pair<int, Direction> ret = bfs(cellIsDirtyCondition);
   if (finished_scanning && ret.first == -1)
     finished_cleaning = true;
