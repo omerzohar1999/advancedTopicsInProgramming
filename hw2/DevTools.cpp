@@ -36,9 +36,9 @@ DevTools::DevTools() {
                 }
             }
         }
-    } catch (const std::ifstream::failure& e) {
+    } catch (const std::ifstream::failure &e) {
         std::cerr << "Exception reading from config file: " << e.what() << std::endl;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::cerr << "Exception: " << e.what() << std::endl;
     }
 
@@ -46,7 +46,7 @@ DevTools::DevTools() {
 }
 
 bool DevTools::isVisualizationEnabled() {
-   return is_visualization_enabled;
+    return is_visualization_enabled;
 }
 
 std::string DevTools::getVisualizationFileName() {
@@ -64,7 +64,7 @@ void DevTools::removeVisualizationFile() {
                 std::cerr << "File " << fileName << " could not be removed." << std::endl;
             }
         }
-    } catch (const std::filesystem::filesystem_error& e) {
+    } catch (const std::filesystem::filesystem_error &e) {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
     }
 }

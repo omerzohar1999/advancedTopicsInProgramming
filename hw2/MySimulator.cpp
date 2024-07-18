@@ -18,14 +18,17 @@
 
 HouseCell::HouseCell() {};
 
-uint32_t HouseCell::getDirtLevel() const { return (uint32_t)dirt_level; }
+uint32_t HouseCell::getDirtLevel() const { return (uint32_t) dirt_level; }
+
 void HouseCell::setDirtLevel(u_int8_t dirt_level) {
     this->dirt_level = dirt_level;
 }
+
 void HouseCell::decreaseDirtLevel() {
     if (dirt_level > 0)
         dirt_level--;
 }
+
 void HouseCell::setWall() { is_wall = true; }
 
 bool HouseCell::getIsWall() const { return is_wall; }
@@ -65,6 +68,7 @@ int MySimulator::howMuchDirtHere() const {
 int MySimulator::getBatteryLeft() const {
     return std::floor(battery_current_size);
 }
+
 int MySimulator::getDirtLeft() const {
     int ret = 0;
     for (size_t row = 0; row < cells.size(); row++) {
@@ -99,15 +103,15 @@ bool MySimulator::robotDied() const {
 
 std::string MySimulator::statusString() const {
     if (stepsList.size() >= 1 &&
-    stepsList[stepsList.size() - 1] == Step::Finish)
-            return "FINISHED";
+        stepsList[stepsList.size() - 1] == Step::Finish)
+        return "FINISHED";
     if (robotDied())
         return "DEAD";
     return "WORKING";
 }
 
 bool MySimulator::end() const {
-    return robotDied() || stepsList.size() >= (size_t)max_steps;
+    return robotDied() || stepsList.size() >= (size_t) max_steps;
 }
 
 void MySimulator::updateRobotLocation(Step decision) {
@@ -119,7 +123,7 @@ void MySimulator::updateRobotLocation(Step decision) {
 
 void MySimulator::updateRobotBattery(Step decision) {
     if (isCharging(decision)) {
-        battery_current_size += ((float)battery_max_size / 20);
+        battery_current_size += ((float) battery_max_size / 20);
     } else {
         battery_current_size -= 1;
     }
@@ -238,7 +242,7 @@ bool MySimulator::createOutput(std::string input_file) const {
         file << "DirtLeft = " << getDirtLeft() << std::endl;
         file << "Status = " << statusString() << std::endl;
         file << "Steps:" << std::endl;
-        for (Step d : stepsList) {
+        for (Step d: stepsList) {
             file << stepStringOutput(d);
         }
 
@@ -369,7 +373,7 @@ bool MySimulator::readHouseFile(std::string file_name) {
 
         while (ptr_i <= house_size_rows && std::getline(file, line)) {
             int ptr_j = 1;
-            while (ptr_j <= house_size_cols && ptr_j <= (int)line.size()) {
+            while (ptr_j <= house_size_cols && ptr_j <= (int) line.size()) {
                 // switch by value of cell
                 switch (line[ptr_j - 1]) {
                     case '1':
@@ -447,9 +451,9 @@ void MySimulator::printHouse() {
         for (size_t j = 0; j < cells[i].size(); j++) {
             if (cells[i][j].getIsWall())
                 std::cout << "W";
-            else if (i == (size_t)robot_loc_i && j == (size_t)robot_loc_j)
+            else if (i == (size_t) robot_loc_i && j == (size_t) robot_loc_j)
                 std::cout << "R";
-            else if (i == (size_t)docking_loc_i && j == (size_t)docking_loc_j)
+            else if (i == (size_t) docking_loc_i && j == (size_t) docking_loc_j)
                 std::cout << "D";
             else if (cells[i][j].getDirtLevel() > 0)
                 std::cout << cells[i][j].getDirtLevel();
@@ -482,9 +486,9 @@ void MySimulator::updateVisualization(Step decision) {
             for (size_t j = 0; j < cells[i].size(); j++) {
                 if (cells[i][j].getIsWall())
                     outFile << "W";
-                else if (i == (size_t)robot_loc_i && j == (size_t)robot_loc_j)
+                else if (i == (size_t) robot_loc_i && j == (size_t) robot_loc_j)
                     outFile << "R";
-                else if (i == (size_t)docking_loc_i && j == (size_t)docking_loc_j)
+                else if (i == (size_t) docking_loc_i && j == (size_t) docking_loc_j)
                     outFile << "D";
                 else if (cells[i][j].getDirtLevel() > 0)
                     outFile << cells[i][j].getDirtLevel();

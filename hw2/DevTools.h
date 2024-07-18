@@ -10,16 +10,18 @@
 
 class DevTools {
 public:
-  // Public constructor with no parameters
-  DevTools();
-  bool isVisualizationEnabled();
+    // Public constructor with no parameters
+    DevTools();
 
-  std::string getVisualizationFileName();
+    bool isVisualizationEnabled();
+
+    std::string getVisualizationFileName();
 
 private:
-  // Local variable to store the visualization setting
-  bool is_visualization_enabled = true;
-  void removeVisualizationFile();
+    // Local variable to store the visualization setting
+    bool is_visualization_enabled = true;
+
+    void removeVisualizationFile();
 };
 
 #endif // HW1_DEVTOOLS_H

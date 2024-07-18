@@ -1,5 +1,6 @@
 #ifndef MYSIM_H
 #define MYSIM_H
+
 #include "DevTools.h"
 #include "MyAlgorithm.h"
 #include "MySensors.h"
@@ -18,9 +19,13 @@ public:
     HouseCell();
 
     uint32_t getDirtLevel() const;
+
     void setDirtLevel(u_int8_t dirt_level);
+
     void decreaseDirtLevel();
+
     void setWall();
+
     bool getIsWall() const;
 };
 
@@ -44,34 +49,57 @@ class MySimulator : public Simulator,
     bool error = false;
 
     std::vector<Step> stepsList;
+
     void printHouse();
 
     int getDirtLeft() const;
+
     bool isDirtLeft() const;
+
     bool isInDocking() const;
+
     bool cleaningFinished() const;
+
     bool robotDied() const;
+
     std::string statusString() const;
+
     bool end() const;
+
     void updateRobotLocation(Step decision);
+
     void updateRobotBattery(Step decision);
+
     void updateHouseDirt(Step decision);
+
     bool isCharging(Step decision) const;
+
     bool isBadStep(Step decision) const;
+
     bool changeState();
+
     void updateVisualization(Step decision);
+
     std::filesystem::path
     addPrefixToFilePath(const std::filesystem::path &file_path,
                         const std::string &prefix) const;
 
 public:
     MySimulator();
+
     bool isThereWall(Direction dir) const;
+
     int howMuchDirtHere() const;
+
     int getBatteryLeft() const;
+
     void setAlgorithm(AbstractAlgorithm &algo);
+
     bool run();
+
     bool createOutput(std::string input_file) const;
+
     bool readHouseFile(std::string file_name);
 };
+
 #endif
