@@ -15,6 +15,11 @@ bool MyAlgorithm::isCharging() const {
     return houseGraph.isInDocking() && getBatteryStepsLeft() < battery_max_size;
 }
 
+bool MyAlgorithm::isFinished() const {
+    return houseGraph.isInDocking() && houseGraph.houseWasFullyExplored() &&
+           houseGraph.houseWasFullyCleaned();
+}
+
 bool MyAlgorithm::mustGoCharge(int distFromDocking) const {
     return distFromDocking >= (int) getBatteryStepsLeft() - 1;
 }
@@ -65,10 +70,9 @@ Step MyAlgorithm::nextStep() {
     unvisitedDir = unvisitedDistAndDir.second;
     dirtyDist = dirtyDistAndDir.first;
     dirtyDir = dirtyDistAndDir.second;
-    Step ret = dirToStep(dockingDistAndDir.second);
+    Step ret = dirToStep(dockingDir);
 
-    if (houseGraph.isInDocking() && houseGraph.houseWasFullyExplored() &&
-        houseGraph.houseWasFullyCleaned())
+    if (isFinished())
         return Step::Finish;
 
     if (isCharging()) {
@@ -83,7 +87,7 @@ Step MyAlgorithm::nextStep() {
 
     if (!(houseGraph.houseWasFullyExplored())) {
         std::cout << "looking for an unvisited cell" << std::endl;
-        if (unvisitedDist != -1) {
+        if (unvisitedDist != -1) { // Unvisited exists
             std::cout << "found one!" << std::endl;
             std::cout << "distance is " << unvisitedDist << std::endl;
             std::cout << "direction is "
@@ -93,12 +97,12 @@ Step MyAlgorithm::nextStep() {
             else
                 ret = dirToStep(unvisitedDir);
 
-            /*if (isRunningOutOfStepsUnvisited()) {
+            if (isRunningOutOfStepsUnvisited()) {
               if (houseGraph.isInDocking())
                 ret = Step::Stay;
               else
                 ret = dirToStep(dockingDistAndDir.second);
-            }*/
+            }
             goto end;
         }
     }

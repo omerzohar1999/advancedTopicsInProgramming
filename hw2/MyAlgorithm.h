@@ -38,6 +38,8 @@ public:
     void setBatteryMeter(const BatteryMeter &);
 
     Step nextStep();
+
+    bool isFinished() const;
 };
 
 #endif
