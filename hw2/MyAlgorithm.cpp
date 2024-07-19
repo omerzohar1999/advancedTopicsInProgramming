@@ -11,18 +11,6 @@ size_t MyAlgorithm::getBatteryStepsLeft() const {
 
 MyAlgorithm::MyAlgorithm() {};
 
-bool MyAlgorithm::isCharging() const {
-    return houseGraph.isInDocking() && getBatteryStepsLeft() < battery_max_size;
-}
-
-bool MyAlgorithm::isFinished() const {
-    return houseGraph.isInDocking() && houseGraph.houseWasFullyExplored() &&
-           houseGraph.houseWasFullyCleaned();
-}
-
-bool MyAlgorithm::mustGoCharge(int distFromDocking) const {
-    return distFromDocking >= (int) getBatteryStepsLeft() - 1;
-}
 
 bool MyAlgorithm::isRunningOutOfStepsUnvisited() {
     int dockingDist = houseGraph.dockingBfs().first;
@@ -54,7 +42,38 @@ void MyAlgorithm::setBatteryMeter(const BatteryMeter &batteryMeter) {
     this->battery_max_size = batteryMeter.getBatteryState();
 };
 
+bool MyAlgorithm::isFullyCharged() {
+    return getBatteryStepsLeft() == battery_max_size;
+}
+
+bool MyAlgorithm::hasEnoughChargeDirty(int dockingDist, int dirtyDist) {
+    return dockingDist + dirtyDist <= (int) getBatteryStepsLeft();
+}
+
+bool MyAlgorithm::hasEnoughChargeUnvisited(int dockingDist, int unvisitedDist) {
+    return dockingDist + unvisitedDist <= (int) getBatteryStepsLeft();
+}
+
+bool MyAlgorithm::hasEnoughChargeToClean(int dockingDist) {
+    return (int) getBatteryStepsLeft() > dockingDist;
+}
+
+bool isDirtyDistanceZero(int dirtyDist) {
+    return dirtyDist == 0;
+}
+
+
 Step MyAlgorithm::nextStep() {
+    Step step = getNextStep();
+
+    houseGraph.updateCurrent(step);
+    if (step != Step::Finish)
+        cur_steps_left--;
+    std::cout << "returned step " << stepString(step) << std::endl;
+    return step;
+}
+
+Step MyAlgorithm::getNextStep() {
     houseGraph.visit(
             dirtSensor->dirtLevel(), wallSensor->isWall(Direction::North),
             wallSensor->isWall(Direction::East), wallSensor->isWall(Direction::South),
@@ -70,67 +89,74 @@ Step MyAlgorithm::nextStep() {
     unvisitedDir = unvisitedDistAndDir.second;
     dirtyDist = dirtyDistAndDir.first;
     dirtyDir = dirtyDistAndDir.second;
-    Step ret = dirToStep(dockingDir);
 
-    if (isFinished())
-        return Step::Finish;
-
-    if (isCharging()) {
-        ret = Step::Stay;
-        goto end;
-    }
-
-    if (mustGoCharge(dockingDist)) {
-        ret = dirToStep(dockingDir);
-        goto end;
-    }
-
-    if (!(houseGraph.houseWasFullyExplored())) {
-        std::cout << "looking for an unvisited cell" << std::endl;
-        if (unvisitedDist != -1) { // Unvisited exists
-            std::cout << "found one!" << std::endl;
-            std::cout << "distance is " << unvisitedDist << std::endl;
-            std::cout << "direction is "
-                      << directionString(unvisitedDir) << std::endl;
-            if (unvisitedDist == 0)
-                ret = Step::Stay;
-            else
-                ret = dirToStep(unvisitedDir);
-
-            if (isRunningOutOfStepsUnvisited()) {
-              if (houseGraph.isInDocking())
-                ret = Step::Stay;
-              else
-                ret = dirToStep(dockingDistAndDir.second);
+    if (houseGraph.isInDocking()) {
+        if (houseGraph.houseWasFullyExplored()) {
+            if (houseGraph.houseWasFullyCleaned()) {
+                return Step::Finish;
+            } else {
+                if (isRunningOutOfStepsDirty()) {
+                    return Step::Finish;
+                } else {
+                    if (isFullyCharged()) {
+                        if (hasEnoughChargeDirty(dockingDist, dirtyDist)) {
+                            return dirToStep(dirtyDir);
+                        } else {
+                            return Step::Finish;
+                        }
+                    } else {
+                        return Step::Stay;
+                    }
+                }
             }
-            goto end;
+        } else {
+            if (isRunningOutOfStepsUnvisited()) {
+                return Step::Finish;
+            } else {
+                if (isFullyCharged()) {
+                    if (hasEnoughChargeUnvisited(dockingDist, unvisitedDist)) {
+                        return dirToStep(unvisitedDir);
+                    } else {
+                        return Step::Finish;
+                    }
+                } else {
+                    return Step::Stay;
+                }
+            }
+        }
+    } else {
+        if (houseGraph.houseWasFullyExplored()) {
+            if (houseGraph.houseWasFullyCleaned()) {
+                return dirToStep(dockingDir);
+            } else {
+                if (isRunningOutOfStepsDirty()) {
+                    return dirToStep(dockingDir);
+                } else {
+                    if (hasEnoughChargeDirty(dockingDist, dirtyDist)) {
+                        if (isDirtyDistanceZero(dirtyDist)) {
+                            if (hasEnoughChargeToClean(dockingDist)) {
+                                return Step::Stay;
+                            } else {
+                                return dirToStep(dockingDir);
+                            }
+                        } else {
+                            return dirToStep(dirtyDir);
+                        }
+                    } else {
+                        return dirToStep(dockingDir);
+                    }
+                }
+            }
+        } else {
+            if (isRunningOutOfStepsUnvisited()) {
+                return dirToStep(dockingDir);
+            } else {
+                if (hasEnoughChargeUnvisited(dockingDist, unvisitedDist)) {
+                    return dirToStep(unvisitedDir);
+                } else {
+                    return dirToStep(dockingDir);
+                }
+            }
         }
     }
-
-    if (!(houseGraph.houseWasFullyCleaned())) {
-        std::cout << "looking for a dirty cell" << std::endl;
-        if (dirtyDist != -1) {
-            ret = dirToStep(dirtyDir);
-            if (isRunningOutOfStepsDirty()) {
-                if (houseGraph.isInDocking())
-                    ret = Step::Stay;
-                else
-                    ret = dirToStep(dockingDir);
-            } else if (dockingDist == 0)
-                ret = Step::Stay;
-            goto end;
-        }
-    }
-
-    if (dockingDist == 0) {
-        // from robot POV, house cleaning is finished, and we're in docking.
-        ret = Step::Finish;
-    }
-
-    end:
-    houseGraph.updateCurrent(ret);
-    if (ret != Step::Finish)
-        cur_steps_left--;
-    std::cout << "returned step " << stepString(ret) << std::endl;
-    return ret;
 }

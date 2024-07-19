@@ -16,13 +16,19 @@ class MyAlgorithm : public AbstractAlgorithm,
 
     size_t getBatteryStepsLeft() const;
 
-    bool isCharging() const;
-
-    bool mustGoCharge(int distFromDocking) const;
-
     bool isRunningOutOfStepsUnvisited();
 
     bool isRunningOutOfStepsDirty();
+
+    Step getNextStep();
+
+    bool isFullyCharged();
+
+    bool hasEnoughChargeDirty(int dockingDist, int dirtyDist);
+
+    bool hasEnoughChargeUnvisited(int dockingDist, int unvisitedDist);
+
+    bool hasEnoughChargeToClean(int dockingDist);
 
 public:
     MyAlgorithm();
@@ -39,7 +45,6 @@ public:
 
     Step nextStep();
 
-    bool isFinished() const;
 };
 
 #endif

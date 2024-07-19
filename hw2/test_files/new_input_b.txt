@@ -1,8 +1,8 @@
 3x5 Maze
 MaxSteps = 100
-MaxBattery = 20
+MaxBattery = 21
 Rows = 3
 Cols = 5
-   W0
+   W1
  W W0
 DW000

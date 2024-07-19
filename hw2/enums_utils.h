@@ -13,16 +13,12 @@ inline Direction stepToDir(Step step) {
     switch (step) {
         case Step::North:
             return Direction::North;
-            break;
         case Step::East:
             return Direction::East;
-            break;
         case Step::South:
             return Direction::South;
-            break;
         case Step::West:
             return Direction::West;
-            break;
         default:
             return Direction::North; // should never get here
     }
@@ -32,13 +28,10 @@ inline Step dirToStep(Direction dir) {
     switch (dir) {
         case Direction::North:
             return Step::North;
-            break;
         case Direction::East:
             return Step::East;
-            break;
         case Direction::South:
             return Step::South;
-            break;
         case Direction::West:
             return Step::West;
         default:

@@ -1,5 +1,5 @@
-NumSteps = 20
+NumSteps = 21
 DirtLeft = 0
 Status = FINISHED
 Steps:
-NNEESSEENNSSWWNNWWSSF
+NNEESSEENNsSSWWNNWWSSF
