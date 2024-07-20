@@ -1,6 +1,0 @@
-1x3 Strip
-MaxSteps = 100
-MaxBattery = 2
-Rows = 1
-Cols = 3
-D  

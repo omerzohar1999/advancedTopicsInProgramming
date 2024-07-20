@@ -1,21 +1,5 @@
-North
-North
-East
-South
-South
-East
-North
-North
-Stay
-South
-South
-West
-North
-North
-West
-South
-South
-Number of steps: 17
-Dirt left: 0
-Vaccum cleaner is alive
-Mission ended successfuly
+NumSteps = 21
+DirtLeft = 0
+Status = FINISHED
+Steps:
+NNEESSEENNsSSWWNNWWSSF
