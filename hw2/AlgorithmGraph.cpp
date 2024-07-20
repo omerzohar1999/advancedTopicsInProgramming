@@ -51,18 +51,21 @@ void AlgorithmGraph::addCell(int loc_i, int loc_j) {
 
 void AlgorithmGraph::visit(int dirt, bool wallInNorth, bool wallInEast,
                            bool wallInSouth, bool wallInWest) {
+    Direction dir;
+
     cells[curr_i][curr_j].setDirt(dirt);
     if (cells[curr_i][curr_j].getWasVisited())
         return;
 
     bool isThereWall[4] = {wallInNorth, wallInEast, wallInSouth, wallInWest};
 
+
     // for each direction, if wall doesnt exist:
     //  if cell was previously discovered there, add as neighbor.
     //  else, create cell and add as neighbor.
     for (int i = 0; i < 4; i++) {
 
-        Direction dir = static_cast<Direction>(i);
+        dir = static_cast<Direction>(i);
         int neighbor_i = locIByDirection(curr_i, dir);
         int neighbor_j = locJByDirection(curr_j, dir);
 

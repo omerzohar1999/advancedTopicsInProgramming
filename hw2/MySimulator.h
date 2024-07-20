@@ -91,7 +91,7 @@ public:
 
     int howMuchDirtHere() const;
 
-    int getBatteryLeft() const;
+    float getBatteryLeft() const;
 
     void setAlgorithm(AbstractAlgorithm &algo);
 

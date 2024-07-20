@@ -122,7 +122,7 @@ inline std::string directionString(Direction dir) {
     }
 }
 
-inline u_int32_t locIByDirection(u_int32_t i, Direction dir) {
+inline int locIByDirection(int i, Direction dir) {
     switch (dir) {
         case Direction::North:
             return i - 1;
@@ -133,7 +133,7 @@ inline u_int32_t locIByDirection(u_int32_t i, Direction dir) {
     }
 }
 
-inline u_int32_t locJByDirection(u_int32_t j, Direction dir) {
+inline int locJByDirection(int j, Direction dir) {
     switch (dir) {
         case Direction::East:
             return j + 1;

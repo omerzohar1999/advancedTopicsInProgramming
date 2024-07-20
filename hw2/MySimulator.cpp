@@ -65,7 +65,7 @@ int MySimulator::howMuchDirtHere() const {
     return cells[robot_loc_i][robot_loc_j].getDirtLevel();
 }
 
-int MySimulator::getBatteryLeft() const {
+float MySimulator::getBatteryLeft() const {
     return std::floor(battery_current_size);
 }
 

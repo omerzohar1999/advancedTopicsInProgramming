@@ -12,7 +12,7 @@ public:
 
     virtual int howMuchDirtHere() const = 0;
 
-    virtual int getBatteryLeft() const = 0;
+    virtual float getBatteryLeft() const = 0;
 
     virtual void setAlgorithm(AbstractAlgorithm &algo) = 0;
 

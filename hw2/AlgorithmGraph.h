@@ -7,7 +7,7 @@
 #include <queue>
 #include <vector>
 
-static u_int32_t vaccumGraphCellID = 0;
+static int vaccumGraphCellID = 0;
 
 class VaccumGraphCell {
     bool was_visited = false;
@@ -41,7 +41,7 @@ class AlgorithmGraph {
     bool finished_cleaning = false;
     int curr_i = 0;
     int curr_j = 0;
-    int num_cells = 0;
+    size_t num_cells = 0;
 
     bool cellExists(int loc_i, int loc_j) const;
 

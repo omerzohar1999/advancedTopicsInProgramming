@@ -17,7 +17,7 @@ MyDirtSensor::MyDirtSensor(MyDirtSensor &s) { this->sim = s.sim; }
 void MyDirtSensor::setHouse(std::weak_ptr<Simulator> sim) { this->sim = sim; };
 
 std::size_t MyBatteryMeter::getBatteryState() const {
-    return sim.lock()->getBatteryLeft();
+    return (size_t) sim.lock()->getBatteryLeft();
 };
 
 bool MyWallsSensor::isWall(Direction dir) const {
