@@ -13,8 +13,6 @@ class MyWallsSensor : public WallsSensor {
 public:
     MyWallsSensor() {};
 
-    MyWallsSensor(MyWallsSensor &s);
-
     ~MyWallsSensor() {};
 
     void setHouse(std::weak_ptr<Simulator> sim);
@@ -28,8 +26,6 @@ class MyDirtSensor : public DirtSensor {
 public:
     MyDirtSensor() {};
 
-    MyDirtSensor(MyDirtSensor &s);
-
     ~MyDirtSensor() {};
 
     void setHouse(std::weak_ptr<Simulator> sim);
@@ -42,8 +38,6 @@ class MyBatteryMeter : public BatteryMeter {
 
 public:
     MyBatteryMeter() {};
-
-    MyBatteryMeter(MyBatteryMeter &m);
 
     ~MyBatteryMeter() {};
 
