@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     std::string input = argv[1];
-    auto house = std::make_shared<MySimulator>();
+    std::shared_ptr house = std::make_shared<MySimulator>();
     bool read_error = house->readHouseFile(input);
     if (read_error)
         return 1;

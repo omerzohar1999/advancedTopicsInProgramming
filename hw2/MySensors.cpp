@@ -1,6 +1,7 @@
 #include "MySensors.h"
 #include <iostream>
 #include <memory>
+#include <cmath>
 
 MyBatteryMeter::MyBatteryMeter(MyBatteryMeter &m) { this->sim = m.sim; }
 
@@ -17,7 +18,7 @@ MyDirtSensor::MyDirtSensor(MyDirtSensor &s) { this->sim = s.sim; }
 void MyDirtSensor::setHouse(std::weak_ptr<Simulator> sim) { this->sim = sim; };
 
 std::size_t MyBatteryMeter::getBatteryState() const {
-    return (size_t) sim.lock()->getBatteryLeft();
+    return  (size_t) std::floor(sim.lock()->getBatteryLeft());
 };
 
 bool MyWallsSensor::isWall(Direction dir) const {
