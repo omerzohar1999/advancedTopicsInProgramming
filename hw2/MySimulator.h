@@ -36,7 +36,7 @@ class MySimulator : public Simulator,
     MyWallsSensor wallsSensor;
     MyDirtSensor dirtSensor;
     AbstractAlgorithm *robot;
-    DevTools devTools;
+    std::unique_ptr<DevTools> devTools;
     int robot_loc_i = -1;
     int robot_loc_j = -1;
     int docking_loc_i = -1;

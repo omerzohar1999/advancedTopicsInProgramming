@@ -34,6 +34,7 @@ void HouseCell::setWall() { is_wall = true; }
 bool HouseCell::getIsWall() const { return is_wall; }
 
 MySimulator::MySimulator() {
+    devTools = std::make_unique<DevTools>();
 }
 
 bool MySimulator::isThereWall(Direction dir) const {
@@ -465,11 +466,11 @@ void MySimulator::printHouse() {
 }
 
 void MySimulator::updateVisualization(Step decision) {
-    if (!devTools.isVisualizationEnabled())
+    if (!devTools->isVisualizationEnabled())
         return;
 
     try {
-        std::string file_name = devTools.getVisualizationFileName();
+        std::string file_name = devTools->getVisualizationFileName();
         std::ofstream outFile(file_name, std::ios::app);
         if (!outFile) {
             std::cerr << "Error opening file for writing." << std::endl;

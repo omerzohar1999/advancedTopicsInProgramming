@@ -19,7 +19,7 @@ public:
 
 private:
     // Local variable to store the visualization setting
-    bool is_visualization_enabled = true;
+    bool is_visualization_enabled = false;
 
     void removeVisualizationFile();
 };
