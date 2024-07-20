@@ -13,14 +13,14 @@
 
 class HouseCell {
     bool is_wall = false;
-    u_int8_t dirt_level = 0;
+    int dirt_level = 0;
 
 public:
     HouseCell();
 
-    uint32_t getDirtLevel() const;
+    int getDirtLevel() const;
 
-    void setDirtLevel(u_int8_t dirt_level);
+    void setDirtLevel(int dirt_level);
 
     void decreaseDirtLevel();
 
@@ -37,14 +37,14 @@ class MySimulator : public Simulator,
     MyDirtSensor dirtSensor;
     AbstractAlgorithm *robot;
     DevTools devTools;
-    int32_t robot_loc_i = -1;
-    int32_t robot_loc_j = -1;
-    int32_t docking_loc_i = -1;
-    int32_t docking_loc_j = -1;
-    int32_t house_size_rows = -1;
-    int32_t house_size_cols = -1;
-    int32_t max_steps = -1;
-    int32_t battery_max_size = -1;
+    int robot_loc_i = -1;
+    int robot_loc_j = -1;
+    int docking_loc_i = -1;
+    int docking_loc_j = -1;
+    int house_size_rows = -1;
+    int house_size_cols = -1;
+    size_t max_steps = -1;
+    size_t battery_max_size = -1;
     float battery_current_size = -1;
     bool error = false;
 
@@ -80,9 +80,9 @@ class MySimulator : public Simulator,
 
     void updateVisualization(Step decision);
 
-    std::filesystem::path
+    static std::filesystem::path
     addPrefixToFilePath(const std::filesystem::path &file_path,
-                        const std::string &prefix) const;
+                        const std::string &prefix) ;
 
 public:
     MySimulator();

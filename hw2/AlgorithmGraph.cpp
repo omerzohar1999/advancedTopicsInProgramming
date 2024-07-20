@@ -15,14 +15,14 @@ void VaccumGraphCell::setDocking() { is_docking = true; }
 
 void VaccumGraphCell::setVisited() { was_visited = true; }
 
-u_int32_t VaccumGraphCell::getID() const { return id; }
+int VaccumGraphCell::getID() const { return id; }
 
 void VaccumGraphCell::decreaseDirt() {
     if (dirt > 0)
         dirt--;
 }
 
-void VaccumGraphCell::setDirt(size_t dirt) { this->dirt = dirt; }
+void VaccumGraphCell::setDirt(int dirt) { this->dirt = dirt; }
 
 auto cellIsDockingCondition = [](const VaccumGraphCell cell) {
     return cell.getIsDocking();
@@ -49,7 +49,7 @@ void AlgorithmGraph::addCell(int loc_i, int loc_j) {
     num_cells++;
 }
 
-void AlgorithmGraph::visit(size_t dirt, bool wallInNorth, bool wallInEast,
+void AlgorithmGraph::visit(int dirt, bool wallInNorth, bool wallInEast,
                            bool wallInSouth, bool wallInWest) {
     cells[curr_i][curr_j].setDirt(dirt);
     if (cells[curr_i][curr_j].getWasVisited())

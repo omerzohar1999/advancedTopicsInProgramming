@@ -7,7 +7,7 @@
 
 class MyAlgorithm : public AbstractAlgorithm,
                     public std::enable_shared_from_this<MyAlgorithm> {
-    u_int32_t battery_max_size = 0;
+    size_t battery_max_size = 0;
     const WallsSensor *wallSensor;
     const BatteryMeter *batteryMeter;
     const DirtSensor *dirtSensor;
@@ -31,11 +31,9 @@ class MyAlgorithm : public AbstractAlgorithm,
     bool hasEnoughChargeToClean(int dockingDist);
 
 public:
-    MyAlgorithm();
-
     ~MyAlgorithm() {};
 
-    void setMaxSteps(std::size_t maxSteps);
+    void setMaxSteps(size_t maxSteps);
 
     void setWallsSensor(const WallsSensor &);
 

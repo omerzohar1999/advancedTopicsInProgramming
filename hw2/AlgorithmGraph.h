@@ -12,8 +12,8 @@ static u_int32_t vaccumGraphCellID = 0;
 class VaccumGraphCell {
     bool was_visited = false;
     bool is_docking = false;
-    size_t dirt = 0;
-    u_int32_t id = vaccumGraphCellID++;
+    int dirt = 0;
+    int id = vaccumGraphCellID++;
 
 public:
     VaccumGraphCell();
@@ -28,11 +28,11 @@ public:
 
     void setVisited();
 
-    u_int32_t getID() const;
+    int getID() const;
 
     void decreaseDirt();
 
-    void setDirt(size_t dirt);
+    void setDirt(int dirt);
 };
 
 class AlgorithmGraph {
@@ -48,7 +48,7 @@ class AlgorithmGraph {
 public:
     AlgorithmGraph();
 
-    void visit(size_t dirt, bool wallInNorth, bool wallInEast, bool wallInSouth,
+    void visit(int dirt, bool wallInNorth, bool wallInEast, bool wallInSouth,
                bool wallInWest);
 
     std::pair<int, Direction>

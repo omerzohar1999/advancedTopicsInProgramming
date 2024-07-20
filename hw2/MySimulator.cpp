@@ -18,9 +18,9 @@
 
 HouseCell::HouseCell() {};
 
-uint32_t HouseCell::getDirtLevel() const { return (uint32_t) dirt_level; }
+int HouseCell::getDirtLevel() const { return dirt_level; }
 
-void HouseCell::setDirtLevel(u_int8_t dirt_level) {
+void HouseCell::setDirtLevel(int dirt_level) {
     this->dirt_level = dirt_level;
 }
 
@@ -314,7 +314,7 @@ bool MySimulator::readHouseFile(std::string file_name) {
             error = true;
             return error;
         }
-        battery_current_size = battery_max_size;
+        battery_current_size = (float) battery_max_size;
 
         std::getline(file, line);
         ss = std::stringstream(line);
@@ -508,7 +508,7 @@ void MySimulator::updateVisualization(Step decision) {
 
 std::filesystem::path
 MySimulator::addPrefixToFilePath(const std::filesystem::path &file_path,
-                                 const std::string &prefix) const {
+                                 const std::string &prefix) {
     // Extract the parent path (directory)
     std::filesystem::path parent_path = file_path.parent_path();
 

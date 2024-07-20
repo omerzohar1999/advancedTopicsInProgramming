@@ -9,9 +9,6 @@ size_t MyAlgorithm::getBatteryStepsLeft() const {
     return batteryMeter->getBatteryState();
 }
 
-MyAlgorithm::MyAlgorithm() {};
-
-
 bool MyAlgorithm::isRunningOutOfStepsUnvisited() {
     int dockingDist = houseGraph.dockingBfs().first;
     int unvisitedDist = houseGraph.unvisitedBfs().first;
@@ -25,7 +22,7 @@ bool MyAlgorithm::isRunningOutOfStepsDirty() {
     return dockingDist + dirtyDist >= (int) cur_steps_left;
 }
 
-void MyAlgorithm::setMaxSteps(std::size_t maxSteps) {
+void MyAlgorithm::setMaxSteps(size_t maxSteps) {
     this->cur_steps_left = maxSteps;
 };
 
