@@ -11,7 +11,7 @@ We have prepared 3 pairs of <input, output> files under a directory "test_files"
 The executable either returns 0 (success) or another integer (failure).
 Additionally, the executable writes to a text file in the same directory that it's in, and for input file `file_name` ,the output file will be named "output_${file_name}"
 
-Our Python script:
+Our Python script ("tester.py"):
 * Runs the executable with each one of the input files
 * Compares the returned value with: 1 for "input_a.txt", 0 for "input_b.txt", and 0 for "input_c.txt"
 * For every input file `file_name = "input_${x}.txt"` , Compares the output file "output_${filename}" with "output${x}.txt"
