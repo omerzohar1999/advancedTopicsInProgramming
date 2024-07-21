@@ -71,9 +71,6 @@ void AlgorithmGraph::visit(int dirt, bool wallInNorth, bool wallInEast,
 
         if (!isThereWall[i] && !cellExists(neighbor_i, neighbor_j)) {
             addCell(neighbor_i, neighbor_j);
-            std::cout << "added cell " << cells.at(neighbor_i).at(neighbor_j).getID()
-                      << " in (" << neighbor_i << "," << neighbor_j << ")"
-                      << std::endl;
         }
     }
 
@@ -89,7 +86,6 @@ std::pair<int, Direction> AlgorithmGraph::bfs(
         ret.first = 0;
         return ret;
     }
-    std::cout << "we know about " << num_cells << " cells" << std::endl;
     std::vector<bool> visited(num_cells);
     std::vector<int> distances(num_cells);
     std::vector<Direction> parent(num_cells);
@@ -193,7 +189,6 @@ std::pair<int, Direction> AlgorithmGraph::unvisitedBfs() {
     std::pair<int, Direction> ret = bfs(cellWasntVisitedCondition);
     if (ret.first == -1) {
         finished_scanning = true;
-        std::cout << "finished scanning house" << std::endl;
     }
     return ret;
 }

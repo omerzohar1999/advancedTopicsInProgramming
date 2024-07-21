@@ -1,0 +1,11 @@
+6x7 House
+MaxSteps = 1000
+MaxBattery = 20
+Rows = 6
+Cols = 7
+9A34B63
+CCW0000
+EFD500W
+Wgh4()2
+=+][esp
+0870t01

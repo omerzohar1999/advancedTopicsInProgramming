@@ -1,0 +1,25 @@
+# Automatic testing of the derived executable via Python script:
+After creating the program's executable (`myrobot`) via `make` command we have the following testing suite.
+
+The executable takes a single parameter of a file path.
+
+We have prepared 3 pairs of <input, output> files under a directory "test_files" in the project's directory:
+* "input_a.txt", "output_a.txt"
+* "input_b.txt", "output_b.txt"
+* "input_c.txt", "output_c.txt"
+
+The executable either returns 0 (success) or another integer (failure).
+Additionally, the executable writes to a text file in the same directory that it's in, and for input file `file_name` ,the output file will be named "output_${file_name}"
+
+Our Python script:
+* Runs the executable with each one of the input files
+* Compares the returned value with: 1 for "input_a.txt", 0 for "input_b.txt", and 0 for "input_c.txt"
+* For every input file `file_name = "input_${x}.txt"` , Compares the output file "output_${filename}" with "output${x}.txt"
+
+If the compared values are equal, prints "OK returned value".
+Otherwise, writes "Expected returned value: ${expected}, Received: ${received}".
+
+If the compared files are equal, prints "OK output file".
+Otherwise, writes "Output file different from expected".
+
+If all comparisons are good, writes "All tests passed", otherwise writes "Some test failed".

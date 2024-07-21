@@ -38,10 +38,6 @@ MySimulator::MySimulator() {
 }
 
 bool MySimulator::isThereWall(Direction dir) const {
-    std::cout << "checking if there's wall" << std::endl;
-    std::cout << "robot location: (" << robot_loc_i << "," << robot_loc_j << ")"
-              << std::endl;
-    std::cout << "move direction: " << directionString(dir) << std::endl;
     switch (dir) {
         case Direction::North:
             return robot_loc_i <= 1 || cells[robot_loc_i - 1][robot_loc_j].getIsWall();
@@ -142,10 +138,8 @@ inline bool MySimulator::isCharging(Step decision) const {
 
 bool MySimulator::isBadStep(Step decision) const {
     if (!isStationaryStep(decision) && isThereWall(stepToDir(decision))) {
-        std::cout << "step is into a wall" << std::endl;
         return true;
     }
-    std::cout << "step is not into a wall" << std::endl;
     if (battery_current_size < 1 && !isCharging(decision)) {
         return true;
     }
@@ -158,8 +152,6 @@ bool MySimulator::changeState() {
 
     Step decision = robot->nextStep();
 
-    std::cout << "got step " << stepString(decision) << std::endl;
-
     stepsList.push_back(decision);
 
     if (decision == Step::Finish) {
@@ -170,20 +162,14 @@ bool MySimulator::changeState() {
         return true;
     }
 
-    std::cout << "step was not finish" << std::endl;
-
     if (isBadStep(decision)) {
         error = true;
         return true;
     }
 
-    std::cout << "step was not bad" << std::endl;
-
     updateRobotLocation(decision);
     updateRobotBattery(decision);
     updateHouseDirt(decision);
-
-    printHouse();
 
     updateVisualization(decision);
 
@@ -354,12 +340,8 @@ bool MySimulator::readHouseFile(std::string file_name) {
             return error;
         }
 
-        std::cout << "house size is (" << house_size_rows << "," << house_size_cols
-                  << ")" << std::endl;
-
         cells.resize(house_size_rows + 2);
-        std::cout << "including outer walls, numOfRows:" << cells.size()
-                  << std::endl;
+
         for (size_t i = 0; i < cells.size(); i++) {
             cells[i].resize(house_size_cols + 2);
             cells[i][0].setWall();
@@ -430,7 +412,6 @@ bool MySimulator::readHouseFile(std::string file_name) {
             return error;
         }
 
-        printHouse();
         error = false;
         return error;
 
@@ -446,25 +427,6 @@ bool MySimulator::readHouseFile(std::string file_name) {
 
 }
 
-void MySimulator::printHouse() {
-
-    for (size_t i = 0; i < cells.size(); i++) {
-        for (size_t j = 0; j < cells[i].size(); j++) {
-            if (cells[i][j].getIsWall())
-                std::cout << "W";
-            else if (i == (size_t) robot_loc_i && j == (size_t) robot_loc_j)
-                std::cout << "R";
-            else if (i == (size_t) docking_loc_i && j == (size_t) docking_loc_j)
-                std::cout << "D";
-            else if (cells[i][j].getDirtLevel() > 0)
-                std::cout << cells[i][j].getDirtLevel();
-            else
-                std::cout << " ";
-        }
-        std::cout << std::endl;
-    }
-}
-
 void MySimulator::updateVisualization(Step decision) {
     if (!devTools->isVisualizationEnabled())
         return;
@@ -476,8 +438,6 @@ void MySimulator::updateVisualization(Step decision) {
             std::cerr << "Error opening file for writing." << std::endl;
             return;
         }
-
-        std::cout << "writing to file: " << file_name << std::endl;
 
         // Write the direction
         outFile << stepString(decision) << std::endl;

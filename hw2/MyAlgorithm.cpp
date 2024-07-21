@@ -66,7 +66,6 @@ Step MyAlgorithm::nextStep() {
     houseGraph.updateCurrent(step);
     if (step != Step::Finish)
         cur_steps_left--;
-    std::cout << "returned step " << stepString(step) << std::endl;
     return step;
 }
 
