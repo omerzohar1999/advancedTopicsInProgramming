@@ -14,16 +14,15 @@
 #include "simulator/MySimulator.h"
 
 std::vector<std::pair<std::string, std::unique_ptr<MySimulator>>> simulators;
-std::vector<std::pair<std::string, std::unique_ptr<AbstractAlgorithm>>>
-    algorithms;
+std::vector<std::string> algorithm_names;
 std::queue<
     std::pair<std::pair<int, int>, std::pair<std::unique_ptr<AbstractAlgorithm>,
                                              std::unique_ptr<MySimulator>>>>
     q;
 std::mutex q_mutex;
 std::vector<std::vector<int>> scores;
-std::vector<std::string> algo_path;
-std::vector<std::string> house_path;
+std::vector<void *> algorithm_handles;
+
 bool create_output_files = true;
 
 template <typename Func, typename... Args>
@@ -60,14 +59,12 @@ void thread_job_func() {
                                                        // second is house index
 
     std::string house_name = simulators[pair_indices.second].first;
-    std::string algo_name = algorithms[pair_indices.first].first;
+    std::string algo_name = algorithm_names[pair_indices.first];
 
     std::unique_ptr<MySimulator> sim = std::move(pair_sim.second.second);
     std::unique_ptr<AbstractAlgorithm> algo = std::move(pair_sim.second.first);
 
-    std::cout << "Setting Algorithm" << std::endl;
     sim->setAlgorithm(*algo);
-    std::cout << "Set algorithm" << std::endl;
 
     int max_steps = sim->getMaxSteps();
 
@@ -97,12 +94,14 @@ void thread_job_func() {
 int main(int argc, char *argv[]) {
   int num_threads = 10;
 
+  std::filesystem::path house_path = std::filesystem::current_path();
+  std::filesystem::path algo_path = std::filesystem::current_path();
   for (int i = 1; i < argc; i++) {
     std::string arg = argv[i];
     if (arg.find("-algo_path=") == 0) {
-      algo_path.push_back(arg.substr(11));
+      algo_path = std::filesystem::path(arg.substr(11));
     } else if (arg.find("-house_path=") == 0) {
-      house_path.push_back(arg.substr(12));
+      house_path = std::filesystem::path(arg.substr(12));
     } else if (arg.find("-num_threads=") == 0) {
       num_threads = std::stoi(arg.substr(13));
     } else if (arg.compare("-summary_only") == 0) {
@@ -110,127 +109,73 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (algo_path.empty()) {
-    // get all .so files in the working directory
-    std::filesystem::path dir_path = std::filesystem::current_path();
-    for (const auto &entry : std::filesystem::directory_iterator(dir_path)) {
-      if (entry.path().extension() == ".so") {
+  // get all .so files in the working directory
+  for (const auto &entry : std::filesystem::directory_iterator(algo_path)) {
+    if (entry.path().extension() == ".so") {
 
-        // find name of algorithm: it's an .so file with maybe lib prefix,
-        // remove both
-        std::string algo_name = entry.path().filename().string();
-        if (algo_name.find("lib") == 0) {
-          algo_name = algo_name.substr(3);
+      // find name of algorithm: it's an .so file with maybe lib prefix,
+      // remove both
+      std::string algo_name = entry.path().filename().string();
+      if (algo_name.find("lib") == 0) {
+        algo_name = algo_name.substr(3);
+      }
+
+      void *library_handle = dlopen(entry.path().c_str(), RTLD_LAZY);
+
+      if (!library_handle) {
+
+        std::ofstream error_file(algo_name + ".error");
+
+        if (error_file.is_open()) {
+          error_file << dlerror() << std::endl;
+          error_file.close();
         }
 
-        void *library_handle = dlopen(entry.path().c_str(), RTLD_LAZY);
-
-        if (!library_handle) {
-
-          std::ofstream error_file(algo_name + ".error");
-
-          if (error_file.is_open()) {
-            error_file << dlerror() << std::endl;
-            error_file.close();
-          }
-
-          else {
-            std::cout << "Failed to open " << algo_name << ".error"
-                      << std::endl;
-          }
+        else {
+          std::cout << "Failed to open " << algo_name << ".error" << std::endl;
         }
-
-        else
-          algo_path.push_back(algo_name);
-      }
-    }
-  } else {
-    // open the .so file given as argument
-    void *library_handle = dlopen(algo_path[0].c_str(), RTLD_LAZY);
-
-    if (!library_handle) {
-      std::string algo_name =
-          algo_path[0].substr(3, algo_path[0].find(".so") - 3);
-      std::ofstream error_file(algo_name + ".error");
-
-      if (error_file.is_open()) {
-        error_file << dlerror() << std::endl;
-        error_file.close();
       }
 
-      else {
-        std::cout << "Failed to open " << algo_name << ".error" << std::endl;
-      }
-      return 1;
+      else
+        algorithm_handles.push_back(library_handle);
     }
   }
 
-  if (house_path.empty()) {
-    // get all .house files in the directory
-    std::filesystem::path dir_path = std::filesystem::current_path();
-    for (const auto &entry : std::filesystem::directory_iterator(dir_path)) {
-      if (entry.path().extension() == ".house") {
-        // get house name: house file name without the extension or the path
-        std::string house_name = entry.path().filename().string();
+  // get all .house files in the directory
+  for (const auto &entry : std::filesystem::directory_iterator(house_path)) {
+    if (entry.path().extension() == ".house") {
+      // get house name: house file name without the extension or the path
+      std::string house_name = entry.path().filename().string();
 
-        std::cout << "house name: " << house_name << std::endl;
-        // try creating a simulator with the house file
-        std::unique_ptr<MySimulator> sim = std::make_unique<MySimulator>();
-        if (sim->readHouseFile(entry.path().string())) {
-          std::cout << "Error reading house file" << std::endl;
-          // create housename.error file
-          std::ofstream error_file(house_name + ".error");
-          if (error_file.is_open()) {
-            error_file << "Error reading house file" << std::endl;
-            error_file.close();
-          } else {
-            std::cout << "Failed to open " << house_name << ".error"
-                      << std::endl;
-          }
+      // try creating a simulator with the house file
+      std::unique_ptr<MySimulator> sim = std::make_unique<MySimulator>();
+      if (sim->readHouseFile(entry.path().string())) {
+        std::cout << "Error reading house file" << std::endl;
+        // create housename.error file
+        std::ofstream error_file(house_name + ".error");
+        if (error_file.is_open()) {
+          error_file << "Error reading house file" << std::endl;
+          error_file.close();
         } else {
-          std::cout << "house " << house_name << " read successfully"
-                    << std::endl;
-          simulators.emplace_back(house_name, std::move(sim));
+          std::cout << "Failed to open " << house_name << ".error" << std::endl;
         }
-      }
-    }
-  } else {
-    // try creating a simulator with the house file
-    std::unique_ptr<MySimulator> sim = std::make_unique<MySimulator>();
-    // get house name: house file name without the extension or the path
-    std::string house_name = house_path[0].substr(
-        house_path[0].find_last_of("/") + 1,
-        house_path[0].find(".house") - house_path[0].find_last_of("/") - 1);
-
-    if (sim->readHouseFile(house_path[0])) {
-      // create housename.error file
-
-      std::ofstream error_file(house_name + ".error");
-      if (error_file.is_open()) {
-        error_file << "Error reading house file" << std::endl;
-        error_file.close();
       } else {
-        std::cout << "Failed to open " << house_name << ".error" << std::endl;
+        simulators.emplace_back(house_name.substr(0, house_name.find(".house")),
+                                std::move(sim));
       }
-      return 1;
-    } else {
-      std::cout << "house " << house_path[0] << " read successfully"
-                << std::endl;
-      simulators.emplace_back(house_name, std::move(sim));
     }
   }
 
-  scores.resize(algo_path.size());
+  scores.resize(algorithm_handles.size());
   for (size_t i = 0; i < scores.size(); i++) {
-    scores[i].resize(house_path.size());
+    scores[i].resize(simulators.size());
   }
 
   AlgorithmRegistrar registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
 
   size_t i = 0;
   for (auto &algo : registrar) {
-    std::cout << "adding " << algo.name() << std::endl;
-    algorithms.emplace_back(algo.name(), algo.create());
+    algorithm_names.emplace_back(algo.name());
     for (size_t j = 0; j < simulators.size(); j++) {
 
       std::unique_ptr<MySimulator> sim =
@@ -268,5 +213,13 @@ int main(int argc, char *argv[]) {
     summary_file.close();
   } else {
     std::cout << "Failed to open summary.csv" << std::endl;
+  }
+
+  simulators.clear();
+  registrar.clear();
+  algorithm_handles.clear();
+
+  for (auto handle : algorithm_handles) {
+    dlclose(handle);
   }
 }

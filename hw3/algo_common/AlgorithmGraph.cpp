@@ -96,9 +96,6 @@ void AlgorithmGraph::updateDistancesFromDocking() {
     int ptr_j = q.front().second;
     int ptr_id = cells.at(ptr_i).at(ptr_j).getID();
 
-    std::cout << "updateDistancesFromDocking: visiting cell " << ptr_i << ","
-              << ptr_j << std::endl;
-
     found_dirty |= cellIsDirtyCondition(cells.at(ptr_i).at(ptr_j));
     found_unvisited |= cellWasntVisitedCondition(cells.at(ptr_i).at(ptr_j));
 
@@ -134,17 +131,8 @@ void AlgorithmGraph::updateDistancesFromDocking() {
       int east_cell_id =
           cells.at(east_coordinates.first).at(east_coordinates.second).getID();
 
-      std::cout << "updateDistancesFromDocking: visiting eastern cell "
-                << east_coordinates.first << "," << east_coordinates.second
-                << std::endl;
       if (!visited[east_cell_id]) {
-        std::cout << "updateDistancesFromDocking: eastern cell not visited"
-                  << std::endl;
         visited[east_cell_id] = true;
-        std::cout << "updating distance from docking to be "
-                  << distances[ptr_id] << " + 1 for cell no. " << east_cell_id
-                  << " which is in (" << east_coordinates.first << ","
-                  << east_coordinates.second << ")" << std::endl;
         distances[east_cell_id] = distances[ptr_id] + 1;
 
         cells.at(east_coordinates.first)
@@ -222,12 +210,7 @@ std::pair<std::pair<int, Direction>, int> AlgorithmGraph::bfs(
   std::pair<int, Direction> ret;
   ret.first = -1;
   ret.second = Direction::North;
-  std::cout << "cell (" << curr_i << "," << curr_j
-            << ") is dirty: " << cells.at(curr_i).at(curr_j).getIsDirty()
-            << " is visited " << cells.at(curr_i).at(curr_j).getWasVisited()
-            << std::endl;
   if (condition((cells.at(curr_i).at(curr_j)))) {
-    std::cout << "bfs: found cell " << curr_i << "," << curr_j << std::endl;
     ret.first = 0;
     return std::pair<std::pair<int, Direction>, int>(
         ret, cells.at(curr_i).at(curr_j).getDistanceFromDocking());
@@ -247,41 +230,25 @@ std::pair<std::pair<int, Direction>, int> AlgorithmGraph::bfs(
     int ptr_i = q.front().first;
     int ptr_j = q.front().second;
     int ptr_id = cells.at(ptr_i).at(ptr_j).getID();
-    std::cout << "bfs: visiting cell " << ptr_i << "," << ptr_j << std::endl;
     q.pop();
 
-    std::cout << "cell (" << ptr_i << "," << ptr_j
-              << ") is dirty: " << cells.at(ptr_i).at(ptr_j).getIsDirty()
-              << " is visited " << cells.at(ptr_i).at(ptr_j).getWasVisited()
-              << std::endl;
     if (condition(cells.at(ptr_i).at(ptr_j))) {
 
-      std::cout << "cell (" << ptr_i << "," << ptr_j << ") passed condition"
-                << std::endl;
       ret.first = distances[cells.at(ptr_i).at(ptr_j).getID()];
       int distance_ret_to_docking =
           cells.at(ptr_i).at(ptr_j).getDistanceFromDocking();
       // backtrack to current
       while (curr_i != ptr_i || curr_j != ptr_j) {
         Direction dir_to_parent = parent[cells.at(ptr_i).at(ptr_j).getID()];
-        std::cout << "backtracking to (" << ptr_i << "," << ptr_j << ") from ()"
-                  << locIByDirection(ptr_i, dir_to_parent) << ","
-                  << locJByDirection(ptr_j, dir_to_parent) << "), direction is "
-                  << directionString(dir_to_parent) << std::endl;
         int new_i = locIByDirection(ptr_i, dir_to_parent);
         int new_j = locJByDirection(ptr_j, dir_to_parent);
         if (new_i == curr_i && new_j == curr_j) {
           ret.second = oppositeDirection(dir_to_parent);
-          std::cout << "found direction to cell: "
-                    << directionString(ret.second) << std::endl;
           break;
         }
         ptr_i = new_i;
         ptr_j = new_j;
       }
-      std::cout << "returning ((distance, direction), distance to docking): (("
-                << ret.first << "," << directionString(ret.second) << "), "
-                << distance_ret_to_docking << ")" << std::endl;
       return std::pair<std::pair<int, Direction>, int>(ret,
                                                        distance_ret_to_docking);
     }
@@ -355,7 +322,6 @@ std::pair<int, Direction> AlgorithmGraph::dockingDistAndDir() {
 }
 
 std::pair<std::pair<int, Direction>, int> AlgorithmGraph::unvisitedBfs() {
-  std::cout << "unvisitedBfs" << std::endl;
   std::pair<std::pair<int, Direction>, int> ret =
       bfs(cellWasntVisitedCondition);
   if (ret.first.first == -1) {
@@ -365,7 +331,6 @@ std::pair<std::pair<int, Direction>, int> AlgorithmGraph::unvisitedBfs() {
 }
 
 std::pair<std::pair<int, Direction>, int> AlgorithmGraph::dirtyBfs() {
-  std::cout << "dirtyBfs" << std::endl;
   std::pair<std::pair<int, Direction>, int> ret = bfs(cellIsDirtyCondition);
   if (finished_scanning && ret.first.first == -1)
     finished_cleaning = true;

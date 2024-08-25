@@ -5,10 +5,10 @@
 #include <iostream>
 #include <memory>
 
-class Algorithm2 : public BaseAlgorithm {
+class Algorithm_206990236_314978222_B : public BaseAlgorithm {
 
 public:
-  ~Algorithm2() override {}
+  ~Algorithm_206990236_314978222_B() override {}
   Step getNextStep() {
     // Update house graph with current sensor readings and distances from
     // docking
@@ -60,10 +60,6 @@ public:
     Direction dirtyDir = dirtyDistAndDir.first.second;
     int dirtyToDockingDist = dirtyDistAndDir.second;
 
-    std::cout << "dirtyDist: " << dirtyDist
-              << ", dirtyDir: " << directionString(dirtyDir)
-              << ", dirtyToDockingDist: " << dirtyToDockingDist << std::endl;
-
     bool dirtyIsFeasible =
         dirtyDist >= 0 && hasEnoughChargeDirty(dirtyToDockingDist, dirtyDist);
     bool unvisitedIsFeasible =
@@ -90,8 +86,11 @@ public:
     if (dirtyDist == 0)
       return Step::Stay;
 
-    return dirToStep(dirtyDist < unvisitedDist ? dirtyDir : unvisitedDir);
+    if (dirtyDist < unvisitedDist)
+      return dirToStep(dirtyDir);
+    return dirToStep(unvisitedDir);
   }
+
   Step nextStep() {
     Step step = getNextStep();
 
@@ -102,6 +101,4 @@ public:
   }
 };
 
-extern "C" {
-REGISTER_ALGORITHM(Algorithm2);
-}
+REGISTER_ALGORITHM(Algorithm_206990236_314978222_B);

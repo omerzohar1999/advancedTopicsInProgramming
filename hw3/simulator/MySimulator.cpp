@@ -196,11 +196,7 @@ bool MySimulator::changeState() {
   // gets one step from the robot and updates house accordingly.
   // returns whether the simulation finished.
 
-  std::cout << "Changing state" << std::endl;
-
   Step decision = robot->nextStep();
-
-  std::cout << "Got decision: " << stepString(decision) << std::endl;
 
   stepsList.push_back(decision);
 
@@ -209,7 +205,6 @@ bool MySimulator::changeState() {
   }
 
   if (isBadStep(decision)) {
-    std::cout << "Bad step" << std::endl;
     error = true;
     return true;
   }
@@ -219,7 +214,7 @@ bool MySimulator::changeState() {
   updateHouseDirt(decision);
 
   updateVisualization(decision);
-  printHouse();
+  // printHouse();
 
   return end();
 }
@@ -232,12 +227,7 @@ void MySimulator::setAlgorithm(AbstractAlgorithm &algo) {
   wallsSensor.setHouse(this);
   dirtSensor.setHouse(this);
 
-  std::cout << "Setting sensors" << std::endl;
-
   robot->setBatteryMeter(std::move(batteryMeter));
-
-  std::cout << "Set battery meter" << std::endl;
-
   robot->setWallsSensor(std::move(wallsSensor));
   robot->setDirtSensor(std::move(dirtSensor));
 }
@@ -245,8 +235,6 @@ void MySimulator::setAlgorithm(AbstractAlgorithm &algo) {
 bool MySimulator::run() {
   // runs the whole simulation, stops when it ends or if an error occurred.
   // returns whether the cleaning finished successfully.
-
-  std::cout << "Running simulation" << std::endl;
 
   while (!error && !changeState()) {
   }

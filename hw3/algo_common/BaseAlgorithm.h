@@ -19,15 +19,11 @@ public:
 
   size_t getBatteryStepsLeft() const;
 
-  Step getNextStep();
-
   bool isFullyCharged();
 
   bool hasEnoughChargeDirty(int dockingDist, int dirtyDist);
 
   bool hasEnoughChargeUnvisited(int dockingDist, int unvisitedDist);
-
-  bool hasEnoughChargeToClean(int dockingDist);
 
   void setMaxSteps(size_t maxSteps);
 
@@ -36,8 +32,6 @@ public:
   void setDirtSensor(const DirtSensor &);
 
   void setBatteryMeter(const BatteryMeter &);
-
-  virtual Step nextStep() = 0;
 };
 
 #endif

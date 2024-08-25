@@ -4,10 +4,10 @@
 #include "common/enums_utils.h"
 #include <iostream>
 
-class Algorithm1 : public BaseAlgorithm {
+class Algorithm_206990236_314978222_A : public BaseAlgorithm {
 
 public:
-  ~Algorithm1() override {}
+  ~Algorithm_206990236_314978222_A() override {}
   Step getNextStep() {
     // Update house graph with current sensor readings and distances from
     // docking
@@ -47,6 +47,10 @@ public:
       // else go to the docking station
       if (hasEnoughChargeUnvisited(unvisitedToDockingDist, unvisitedDist))
         return dirToStep(unvisitedDir);
+
+      if (houseGraph.isInDocking()) {
+        return Step::Finish;
+      }
       return dirToStep(dockingDistAndDir.second);
     }
 
@@ -77,6 +81,10 @@ public:
       }
       // if the robot doesn't have enough charge to clean the nearest dirty
       // cell, go to the docking station
+      // if the robot is already in the docking station, finish the job.
+      if (houseGraph.isInDocking()) {
+        return Step::Finish;
+      }
       return dirToStep(dockingDistAndDir.second);
     }
 
@@ -98,6 +106,4 @@ public:
   }
 };
 
-extern "C" {
-REGISTER_ALGORITHM(Algorithm1);
-}
+REGISTER_ALGORITHM(Algorithm_206990236_314978222_A);
