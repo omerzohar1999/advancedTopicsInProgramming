@@ -1,13 +1,11 @@
 #ifndef ALGOGRAPH_H
 #define ALGOGRAPH_H
 
-#include "enums.h"
+#include "common/enums.h"
 #include <functional>
 #include <map>
 #include <queue>
 #include <vector>
-
-static int vaccumGraphCellID = 0;
 
 class VaccumGraphCell {
   int distance_from_docking = -1;
@@ -15,10 +13,12 @@ class VaccumGraphCell {
   bool was_visited = false;
   bool is_docking = false;
   int dirt = 0;
-  int id = vaccumGraphCellID++;
+  int id = -1;
 
 public:
   VaccumGraphCell();
+
+  void setID(int id);
 
   bool getIsDocking() const;
 

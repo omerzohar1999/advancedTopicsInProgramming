@@ -1,137 +1,107 @@
-#include "Algorithm2.h"
-#include "AlgorithmRegistration.h"
-#include "algo_common/AlgorithmGraph.h"
-#include "enums.h"
-#include "enums_utils.h"
+#include "algo_common/AlgorithmRegistration.h"
+#include "algo_common/BaseAlgorithm.h"
+#include "common/enums.h"
+#include "common/enums_utils.h"
 #include <iostream>
 #include <memory>
 
-size_t Algorithm2::getBatteryStepsLeft() const {
-  size_t battery_size = batteryMeter->getBatteryState();
-  return battery_size < cur_steps_left ? battery_size : cur_steps_left;
-}
+class Algorithm2 : public BaseAlgorithm {
 
-void Algorithm2::setMaxSteps(size_t maxSteps) {
-  this->cur_steps_left = maxSteps;
-};
+public:
+  ~Algorithm2() override {}
+  Step getNextStep() {
+    // Update house graph with current sensor readings and distances from
+    // docking
+    houseGraph.visit(dirtSensor->dirtLevel(),
+                     wallSensor->isWall(Direction::North),
+                     wallSensor->isWall(Direction::East),
+                     wallSensor->isWall(Direction::South),
+                     wallSensor->isWall(Direction::West));
 
-void Algorithm2::setWallsSensor(const WallsSensor &wallSensor) {
-  this->wallSensor = &wallSensor;
-};
+    if (!houseGraph.finishedScanning())
+      houseGraph.updateDistancesFromDocking();
 
-void Algorithm2::setDirtSensor(const DirtSensor &dirtSensor) {
-  this->dirtSensor = &dirtSensor;
-};
+    // if in docking, check for conditions that will allow to avoid bfs
+    // calculations
 
-void Algorithm2::setBatteryMeter(const BatteryMeter &batteryMeter) {
-  this->batteryMeter = &batteryMeter;
-  this->battery_max_size = batteryMeter.getBatteryState();
-};
+    if (houseGraph.isInDocking()) {
+      if (houseGraph.finishedJob())
+        return Step::Finish;
+      if (!isFullyCharged())
+        return Step::Stay;
+    }
 
-bool Algorithm2::isFullyCharged() {
-  return getBatteryStepsLeft() == battery_max_size;
-}
+    // calculate distances from current location to docking, unvisited and
+    // dirty. if finished scanning/cleaning avoid unnecessary bfs calculations
+    std::pair<int, Direction> dockingDistAndDir =
+        houseGraph.dockingDistAndDir();
 
-bool Algorithm2::hasEnoughChargeDirty(int dockingDist, int dirtyDist) {
-  return dockingDist + dirtyDist <= (int)getBatteryStepsLeft();
-}
+    DistAndDir unvisitedDistAndDir;
+    if (!houseGraph.finishedScanning())
+      unvisitedDistAndDir = houseGraph.unvisitedBfs();
+    else {
+      unvisitedDistAndDir.first.first = -1;
+    }
 
-bool Algorithm2::hasEnoughChargeUnvisited(int dockingDist, int unvisitedDist) {
-  return dockingDist + unvisitedDist <= (int)getBatteryStepsLeft();
-}
+    DistAndDir dirtyDistAndDir;
+    if (!houseGraph.finishedCleaning())
+      dirtyDistAndDir = houseGraph.dirtyBfs();
+    else {
+      dirtyDistAndDir.first.first = -1;
+    }
 
-bool Algorithm2::hasEnoughChargeToClean(int dockingDist) {
-  return (int)getBatteryStepsLeft() > dockingDist;
-}
+    Direction dockingDir = dockingDistAndDir.second;
 
-bool isDirtyDistanceZero(int dirtyDist) { return dirtyDist == 0; }
+    int unvisitedDist = unvisitedDistAndDir.first.first;
+    Direction unvisitedDir = unvisitedDistAndDir.first.second;
+    int unvisitedToDockingDist = unvisitedDistAndDir.second;
 
-Step Algorithm2::nextStep() {
-  Step step = getNextStep();
+    int dirtyDist = dirtyDistAndDir.first.first;
+    Direction dirtyDir = dirtyDistAndDir.first.second;
+    int dirtyToDockingDist = dirtyDistAndDir.second;
 
-  houseGraph.updateCurrent(step);
-  if (step != Step::Finish)
-    cur_steps_left--;
-  return step;
-}
+    std::cout << "dirtyDist: " << dirtyDist
+              << ", dirtyDir: " << directionString(dirtyDir)
+              << ", dirtyToDockingDist: " << dirtyToDockingDist << std::endl;
 
-typedef std::pair<std::pair<int, Direction>, int> DistAndDir;
+    bool dirtyIsFeasible =
+        dirtyDist >= 0 && hasEnoughChargeDirty(dirtyToDockingDist, dirtyDist);
+    bool unvisitedIsFeasible =
+        unvisitedDist >= 0 &&
+        hasEnoughChargeUnvisited(unvisitedToDockingDist, unvisitedDist);
 
-Step Algorithm2::getNextStep() {
-  // Update house graph with current sensor readings and distances from docking
-  houseGraph.visit(
-      dirtSensor->dirtLevel(), wallSensor->isWall(Direction::North),
-      wallSensor->isWall(Direction::East), wallSensor->isWall(Direction::South),
-      wallSensor->isWall(Direction::West));
+    if (houseGraph.isInDocking()) {
+      if (!unvisitedIsFeasible && !dirtyIsFeasible)
+        return Step::Finish;
+    }
 
-  if (!houseGraph.finishedScanning())
-    houseGraph.updateDistancesFromDocking();
+    if (!unvisitedIsFeasible && !dirtyIsFeasible) // job finished
+      return dirToStep(dockingDir);
 
-  // if in docking, check for conditions that will allow to avoid bfs
-  // calculations
+    else if (!unvisitedIsFeasible) // finished scanning, but dirty cells left
+    {
+      if (dirtyDist == 0)
+        return Step::Stay;
+      return dirToStep(dirtyDir);
+    } else if (!dirtyIsFeasible) // no known dirty cells, but unknown cells left
+      return dirToStep(unvisitedDir);
 
-  if (houseGraph.isInDocking()) {
-    if (houseGraph.finishedJob())
-      return Step::Finish;
-    if (!isFullyCharged())
+    // both known dirty cells and unvisited cells exist, pick closest
+    if (dirtyDist == 0)
       return Step::Stay;
-  }
 
-  // calculate distances from current location to docking, unvisited and dirty.
-  // if finished scanning/cleaning avoid unnecessary bfs calculations
-  std::pair<int, Direction> dockingDistAndDir = houseGraph.dockingDistAndDir();
-
-  DistAndDir unvisitedDistAndDir;
-  if (!houseGraph.finishedScanning())
-    unvisitedDistAndDir = houseGraph.unvisitedBfs();
-  else {
-    unvisitedDistAndDir.first.first = -1;
-  }
-
-  DistAndDir dirtyDistAndDir;
-  if (!houseGraph.finishedCleaning())
-    dirtyDistAndDir = houseGraph.dirtyBfs();
-  else {
-    dirtyDistAndDir.first.first = -1;
-  }
-
-  int dockingDist = dockingDistAndDir.first;
-  Direction dockingDir = dockingDistAndDir.second;
-
-  int unvisitedDist = unvisitedDistAndDir.first.first;
-  Direction unvisitedDir = unvisitedDistAndDir.first.second;
-  int unvisitedToDockingDist = unvisitedDistAndDir.second;
-
-  int dirtyDist = dirtyDistAndDir.first.first;
-  Direction dirtyDir = dirtyDistAndDir.first.second;
-  int dirtyToDockingDist = dirtyDistAndDir.second;
-
-  bool dirtyIsFeasible =
-      dirtyDist >= 0 && hasEnoughChargeDirty(dirtyToDockingDist, dirtyDist);
-  bool unvisitedIsFeasible =
-      unvisitedDist >= 0 &&
-      hasEnoughChargeUnvisited(unvisitedToDockingDist, unvisitedDist);
-
-  if (houseGraph.isInDocking()) {
-    if (!unvisitedIsFeasible && !dirtyIsFeasible)
-      return Step::Finish;
-  }
-
-  if (dockingDist <= (batteryMeter->getBatteryState()) + 1 ||
-      dockingDist <= cur_steps_left + 1)
-    return dirToStep(dockingDir);
-
-  if (unvisitedDist == -1 && dirtyDist == -1) // job finished
-    return dirToStep(dockingDir);
-
-  else if (unvisitedDist == -1) // finished scanning, but dirty cells left
-    return dirToStep(dirtyDir);
-
-  else if (dirtyDist == -1) // no known dirty cells, but unknown cells left
-    return dirToStep(unvisitedDir);
-
-  else // both known dirty cells and unvisited cells exist, pick closest
     return dirToStep(dirtyDist < unvisitedDist ? dirtyDir : unvisitedDir);
-}
+  }
+  Step nextStep() {
+    Step step = getNextStep();
 
+    houseGraph.updateCurrent(step);
+    if (step != Step::Finish)
+      cur_steps_left--;
+    return step;
+  }
+};
+
+extern "C" {
 REGISTER_ALGORITHM(Algorithm2);
+}

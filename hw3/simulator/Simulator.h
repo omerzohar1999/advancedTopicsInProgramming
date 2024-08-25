@@ -1,8 +1,8 @@
 #ifndef SIM_H
 #define SIM_H
 
-#include "AbstractAlgorithm.h"
-#include "enums.h"
+#include "common/AbstractAlgorithm.h"
+#include "common/enums.h"
 
 class Simulator {
 public:

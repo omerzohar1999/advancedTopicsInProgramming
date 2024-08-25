@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 
-#include "AlgorithmRegistrar.h"
+#include "common/AlgorithmRegistrar.h"
 
 struct AlgorithmRegistration {
   AlgorithmRegistration(const std::string &name,

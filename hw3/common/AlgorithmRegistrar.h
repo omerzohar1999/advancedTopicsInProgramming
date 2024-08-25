@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "AbstractAlgorithm.h"
+#include "common/AbstractAlgorithm.h"
 
 using AlgorithmFactory = std::function<std::unique_ptr<AbstractAlgorithm>()>;
 

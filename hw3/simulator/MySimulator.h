@@ -1,11 +1,11 @@
 #ifndef MYSIM_H
 #define MYSIM_H
 
-#include "AbstractAlgorithm.h"
-#include "DevTools.h"
-#include "MySensors.h"
-#include "Simulator.h"
-#include "enums.h"
+#include "common/AbstractAlgorithm.h"
+#include "common/enums.h"
+#include "simulator/DevTools.h"
+#include "simulator/MySensors.h"
+#include "simulator/Simulator.h"
 #include <filesystem>
 #include <map>
 #include <string>
@@ -29,8 +29,8 @@ public:
   bool getIsWall() const;
 };
 
-class MySimulator : public Simulator,
-                    public std::enable_shared_from_this<MySimulator> {
+class MySimulator : public Simulator {
+  std::string house_name;
   std::vector<std::vector<HouseCell>> cells;
   MyBatteryMeter batteryMeter;
   MyWallsSensor wallsSensor;
@@ -87,6 +87,8 @@ class MySimulator : public Simulator,
 
 public:
   MySimulator();
+
+  MySimulator(const MySimulator &other);
 
   bool isThereWall(Direction dir) const;
 

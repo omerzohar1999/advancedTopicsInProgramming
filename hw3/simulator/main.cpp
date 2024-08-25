@@ -10,12 +10,15 @@
 #include <thread>
 #include <vector>
 
-#include "AlgorithmRegistrar.h"
-#include "MySimulator.h"
+#include "common/AlgorithmRegistrar.h"
+#include "simulator/MySimulator.h"
 
-std::queue<std::pair<
-    std::pair<std::unique_ptr<AbstractAlgorithm>, std::unique_ptr<MySimulator>>,
-    std::pair<int, int>>>
+std::vector<std::pair<std::string, std::unique_ptr<MySimulator>>> simulators;
+std::vector<std::pair<std::string, std::unique_ptr<AbstractAlgorithm>>>
+    algorithms;
+std::queue<
+    std::pair<std::pair<int, int>, std::pair<std::unique_ptr<AbstractAlgorithm>,
+                                             std::unique_ptr<MySimulator>>>>
     q;
 std::mutex q_mutex;
 std::vector<std::vector<int>> scores;
@@ -40,11 +43,8 @@ run_with_timeout(Func func, std::chrono::milliseconds timeout, Args &&...args) {
 
 void thread_job_func() {
   while (!q.empty()) {
-    // first is whether function completed before timeout, second is whether
-    // there was an error
-    std::pair<std::pair<std::unique_ptr<AbstractAlgorithm>,
-                        std::unique_ptr<MySimulator>>,
-              std::pair<int, int>>
+    std::pair<std::pair<int, int>, std::pair<std::unique_ptr<AbstractAlgorithm>,
+                                             std::unique_ptr<MySimulator>>>
         pair_sim;
 
     {
@@ -56,34 +56,39 @@ void thread_job_func() {
       q.pop();
     }
 
-    int max_steps = pair_sim.first.second->getMaxSteps();
+    std::pair<int, int> pair_indices = pair_sim.first; // first is algo index,
+                                                       // second is house index
+
+    std::string house_name = simulators[pair_indices.second].first;
+    std::string algo_name = algorithms[pair_indices.first].first;
+
+    std::unique_ptr<MySimulator> sim = std::move(pair_sim.second.second);
+    std::unique_ptr<AbstractAlgorithm> algo = std::move(pair_sim.second.first);
+
+    std::cout << "Setting Algorithm" << std::endl;
+    sim->setAlgorithm(*algo);
+    std::cout << "Set algorithm" << std::endl;
+
+    int max_steps = sim->getMaxSteps();
 
     // run simulator.run with timeout
-    auto result = run_with_timeout(&MySimulator::run,
-                                   std::chrono::milliseconds(max_steps),
-                                   pair_sim.first.second.get());
+    auto result = run_with_timeout(
+        &MySimulator::run, std::chrono::milliseconds(max_steps), sim.get());
 
     bool error = result.second;
     bool completed = result.first;
 
     if (error) {
-      std::cout << "Error in house " << pair_sim.second.second << " with algo "
-                << pair_sim.second.first << std::endl;
+      std::cout << "Error in house " << house_name << " with algo " << algo_name
+                << std::endl;
     } else {
-      scores[pair_sim.second.first][pair_sim.second.second] =
-          pair_sim.first.second->calculate_score(completed);
+      scores[pair_indices.first][pair_indices.second] =
+          sim->calculate_score(completed);
 
       if (create_output_files) {
-        // get house name: house file name without the extension
-        std::string house_name = house_path[pair_sim.second.second].substr(
-            0, house_path[pair_sim.second.second].find(".house"));
-        // get algo name: algo file name without the extension .so and without
-        // the lib prefix
-        std::string algo_name = algo_path[pair_sim.second.first].substr(
-            3, algo_path[pair_sim.second.first].find(".so") - 3);
         // output file name is housename-algoname.txt
         std::string output_file = house_name + "-" + algo_name + ".txt";
-        pair_sim.first.second->createOutput(output_file, completed);
+        sim->createOutput(output_file, completed);
       }
     }
   }
@@ -111,8 +116,12 @@ int main(int argc, char *argv[]) {
     for (const auto &entry : std::filesystem::directory_iterator(dir_path)) {
       if (entry.path().extension() == ".so") {
 
-        std::string algo_name = entry.path().string().substr(
-            3, entry.path().string().find(".so") - 3);
+        // find name of algorithm: it's an .so file with maybe lib prefix,
+        // remove both
+        std::string algo_name = entry.path().filename().string();
+        if (algo_name.find("lib") == 0) {
+          algo_name = algo_name.substr(3);
+        }
 
         void *library_handle = dlopen(entry.path().c_str(), RTLD_LAZY);
 
@@ -155,16 +164,20 @@ int main(int argc, char *argv[]) {
       return 1;
     }
   }
+
   if (house_path.empty()) {
     // get all .house files in the directory
     std::filesystem::path dir_path = std::filesystem::current_path();
     for (const auto &entry : std::filesystem::directory_iterator(dir_path)) {
       if (entry.path().extension() == ".house") {
-        std::string house_name = entry.path().string().substr(
-            0, entry.path().string().find(".house"));
+        // get house name: house file name without the extension or the path
+        std::string house_name = entry.path().filename().string();
+
+        std::cout << "house name: " << house_name << std::endl;
         // try creating a simulator with the house file
-        std::unique_ptr<MySimulator> sim(new MySimulator());
+        std::unique_ptr<MySimulator> sim = std::make_unique<MySimulator>();
         if (sim->readHouseFile(entry.path().string())) {
+          std::cout << "Error reading house file" << std::endl;
           // create housename.error file
           std::ofstream error_file(house_name + ".error");
           if (error_file.is_open()) {
@@ -174,17 +187,24 @@ int main(int argc, char *argv[]) {
             std::cout << "Failed to open " << house_name << ".error"
                       << std::endl;
           }
-        } else
-          house_path.push_back(house_name);
+        } else {
+          std::cout << "house " << house_name << " read successfully"
+                    << std::endl;
+          simulators.emplace_back(house_name, std::move(sim));
+        }
       }
     }
   } else {
     // try creating a simulator with the house file
-    std::unique_ptr<MySimulator> sim(new MySimulator());
+    std::unique_ptr<MySimulator> sim = std::make_unique<MySimulator>();
+    // get house name: house file name without the extension or the path
+    std::string house_name = house_path[0].substr(
+        house_path[0].find_last_of("/") + 1,
+        house_path[0].find(".house") - house_path[0].find_last_of("/") - 1);
+
     if (sim->readHouseFile(house_path[0])) {
       // create housename.error file
-      std::string house_name =
-          house_path[0].substr(0, house_path[0].find(".house"));
+
       std::ofstream error_file(house_name + ".error");
       if (error_file.is_open()) {
         error_file << "Error reading house file" << std::endl;
@@ -193,6 +213,10 @@ int main(int argc, char *argv[]) {
         std::cout << "Failed to open " << house_name << ".error" << std::endl;
       }
       return 1;
+    } else {
+      std::cout << "house " << house_path[0] << " read successfully"
+                << std::endl;
+      simulators.emplace_back(house_name, std::move(sim));
     }
   }
 
@@ -205,24 +229,27 @@ int main(int argc, char *argv[]) {
 
   size_t i = 0;
   for (auto &algo : registrar) {
-    for (size_t j = 0; j < house_path.size(); j++) {
-      std::unique_ptr<MySimulator> sim;
-      std::unique_ptr<AbstractAlgorithm> concrete_algo(algo.create());
-      sim->readHouseFile(house_path[j] + ".house");
-      sim->setAlgorithm(*concrete_algo);
+    std::cout << "adding " << algo.name() << std::endl;
+    algorithms.emplace_back(algo.name(), algo.create());
+    for (size_t j = 0; j < simulators.size(); j++) {
+
+      std::unique_ptr<MySimulator> sim =
+          std::make_unique<MySimulator>(*simulators[j].second);
+      std::unique_ptr<AbstractAlgorithm> concrete_algo = algo.create();
+
       std::pair<int, int> pair_indices = {i, j};
       std::pair<std::unique_ptr<AbstractAlgorithm>,
                 std::unique_ptr<MySimulator>>
           pair_sim = {std::move(concrete_algo), std::move(sim)};
 
-      q.push({std::move(pair_sim), pair_indices});
+      q.push({pair_indices, std::move(pair_sim)});
     }
     i++;
   }
 
   std::vector<std::thread> threads;
   threads.resize(num_threads);
-  for (int i = 0; i < threads.size(); ++i) {
+  for (int i = 0; i < (int)threads.size(); ++i) {
     threads[i] = std::thread(thread_job_func);
   }
 

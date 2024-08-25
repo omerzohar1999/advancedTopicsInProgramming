@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -8,16 +9,18 @@
 #include <string>
 #include <vector>
 
-#include "AbstractAlgorithm.h"
-#include "DevTools.h"
+#include "common/AbstractAlgorithm.h"
+#include "common/enums.h"
+#include "common/enums_utils.h"
 
-#include "MySensors.h"
+#include "simulator/DevTools.h"
+#include "simulator/MySensors.h"
+#include "simulator/MySimulator.h"
+
 #include "MySimulator.h"
-#include "enums.h"
-#include "enums_utils.h"
 #include <exception>
 
-HouseCell::HouseCell() {};
+HouseCell::HouseCell(){};
 
 int HouseCell::getDirtLevel() const { return dirt_level; }
 
@@ -34,8 +37,37 @@ bool HouseCell::getIsWall() const { return is_wall; }
 
 MySimulator::MySimulator() { devTools = std::make_unique<DevTools>(); }
 
+MySimulator::MySimulator(const MySimulator &other) {
+  // copy constructor
+
+  devTools = std::make_unique<DevTools>();
+
+  house_name = other.house_name;
+  robot_loc_i = other.robot_loc_i;
+  robot_loc_j = other.robot_loc_j;
+  docking_loc_i = other.docking_loc_i;
+  docking_loc_j = other.docking_loc_j;
+  house_size_rows = other.house_size_rows;
+  house_size_cols = other.house_size_cols;
+  max_steps = other.max_steps;
+  battery_max_size = other.battery_max_size;
+  battery_current_size = other.battery_current_size;
+  error = other.error;
+  initial_dirt = other.initial_dirt;
+
+  // copy cells
+  cells.resize(other.cells.size());
+  for (size_t i = 0; i < cells.size(); i++) {
+    cells[i].resize(other.cells[i].size());
+    for (size_t j = 0; j < cells[i].size(); j++) {
+      cells[i][j] = other.cells[i][j];
+    }
+  }
+}
+
 bool MySimulator::isThereWall(Direction dir) const {
   switch (dir) {
+
   case Direction::North:
     return robot_loc_i <= 1 || cells[robot_loc_i - 1][robot_loc_j].getIsWall();
     break;
@@ -61,6 +93,24 @@ int MySimulator::howMuchDirtHere() const {
 
 float MySimulator::getBatteryLeft() const {
   return std::floor(battery_current_size);
+}
+
+void MySimulator::printHouse() {
+  for (size_t i = 0; i < cells.size(); i++) {
+    for (size_t j = 0; j < cells[i].size(); j++) {
+      if (cells[i][j].getIsWall())
+        std::cout << "W";
+      else if (i == (size_t)robot_loc_i && j == (size_t)robot_loc_j)
+        std::cout << "R";
+      else if (i == (size_t)docking_loc_i && j == (size_t)docking_loc_j)
+        std::cout << "D";
+      else if (cells[i][j].getDirtLevel() > 0)
+        std::cout << cells[i][j].getDirtLevel();
+      else
+        std::cout << " ";
+    }
+    std::cout << std::endl;
+  }
 }
 
 int MySimulator::getDirtLeft() const {
@@ -146,19 +196,20 @@ bool MySimulator::changeState() {
   // gets one step from the robot and updates house accordingly.
   // returns whether the simulation finished.
 
+  std::cout << "Changing state" << std::endl;
+
   Step decision = robot->nextStep();
+
+  std::cout << "Got decision: " << stepString(decision) << std::endl;
 
   stepsList.push_back(decision);
 
   if (decision == Step::Finish) {
-    // in the case Finish was returned,
-    // we want to validate that the cleaning finished successfully.
-    if (!cleaningFinished())
-      error = true;
     return true;
   }
 
   if (isBadStep(decision)) {
+    std::cout << "Bad step" << std::endl;
     error = true;
     return true;
   }
@@ -168,6 +219,7 @@ bool MySimulator::changeState() {
   updateHouseDirt(decision);
 
   updateVisualization(decision);
+  printHouse();
 
   return end();
 }
@@ -176,11 +228,16 @@ void MySimulator::setAlgorithm(AbstractAlgorithm &algo) {
   robot = &algo;
   robot->setMaxSteps(max_steps);
 
-  batteryMeter.setHouse(weak_from_this());
-  wallsSensor.setHouse(weak_from_this());
-  dirtSensor.setHouse(weak_from_this());
+  batteryMeter.setHouse(this);
+  wallsSensor.setHouse(this);
+  dirtSensor.setHouse(this);
+
+  std::cout << "Setting sensors" << std::endl;
 
   robot->setBatteryMeter(std::move(batteryMeter));
+
+  std::cout << "Set battery meter" << std::endl;
+
   robot->setWallsSensor(std::move(wallsSensor));
   robot->setDirtSensor(std::move(dirtSensor));
 }
@@ -188,6 +245,8 @@ void MySimulator::setAlgorithm(AbstractAlgorithm &algo) {
 bool MySimulator::run() {
   // runs the whole simulation, stops when it ends or if an error occurred.
   // returns whether the cleaning finished successfully.
+
+  std::cout << "Running simulation" << std::endl;
 
   while (!error && !changeState()) {
   }
@@ -254,20 +313,25 @@ bool MySimulator::readHouseFile(std::string file_name) {
     }
 
     std::string line;
-    std::getline(file, line); // first line is name: ignore
+    std::getline(file, line); // first line is name and description: ignore
     std::getline(file, line);
 
     std::stringstream ss(line);
     std::string item;
 
     std::getline(ss, item, '=');
-    item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+    // remove spaces from item
+
+    item.erase(std::remove_if(item.begin(), item.end(), isspace), item.end());
+
     if (item != "MaxSteps") {
       error = true;
       return error;
     }
     std::getline(ss, item);
-    item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+    // remove spaces from item
+    item.erase(std::remove_if(item.begin(), item.end(), isspace), item.end());
+
     try {
       this->max_steps = std::stoi(item);
     } catch (int errnum) {
@@ -278,14 +342,18 @@ bool MySimulator::readHouseFile(std::string file_name) {
     ss = std::stringstream(line);
 
     std::getline(ss, item, '=');
-    item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+    // remove spaces from item
+    item.erase(std::remove_if(item.begin(), item.end(), isspace), item.end());
+
     if (item != "MaxBattery") {
       error = true;
       return error;
     }
 
     std::getline(ss, item, '=');
-    item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+    // remove spaces from item
+    item.erase(std::remove_if(item.begin(), item.end(), isspace), item.end());
+
     try {
       battery_max_size = std::stoi(item);
     } catch (int errnum) {
@@ -298,14 +366,18 @@ bool MySimulator::readHouseFile(std::string file_name) {
     ss = std::stringstream(line);
 
     std::getline(ss, item, '=');
-    item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+    // remove spaces from item
+    item.erase(std::remove_if(item.begin(), item.end(), isspace), item.end());
+
     if (item != "Rows") {
       error = true;
       return error;
     }
 
     std::getline(ss, item, '=');
-    item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+    // remove spaces from item
+    item.erase(std::remove_if(item.begin(), item.end(), isspace), item.end());
+
     try {
       house_size_rows = std::stoi(item);
     } catch (int errnum) {
@@ -316,14 +388,18 @@ bool MySimulator::readHouseFile(std::string file_name) {
     ss = std::stringstream(line);
 
     std::getline(ss, item, '=');
-    item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+    // remove spaces from item
+    item.erase(std::remove_if(item.begin(), item.end(), isspace), item.end());
+
     if (item != "Cols") {
       error = true;
       return error;
     }
 
     std::getline(ss, item, '=');
-    item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
+    // remove spaces from item
+    item.erase(std::remove_if(item.begin(), item.end(), isspace), item.end());
+
     try {
       house_size_cols = std::stoi(item);
     } catch (int errnum) {

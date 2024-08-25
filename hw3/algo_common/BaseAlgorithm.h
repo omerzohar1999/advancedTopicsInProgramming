@@ -1,12 +1,15 @@
 #ifndef MYALGO_H
 #define MYALGO_H
 
-#include "AbstractAlgorithm.h"
-#include "AlgorithmGraph.h"
+#include "algo_common/AlgorithmGraph.h"
+#include "common/AbstractAlgorithm.h"
 #include <memory>
 
-class Algorithm2 : public AbstractAlgorithm,
-                   public std::enable_shared_from_this<Algorithm2> {
+typedef std::pair<std::pair<int, Direction>, int> DistAndDir;
+
+class BaseAlgorithm : public AbstractAlgorithm {
+
+public:
   size_t battery_max_size = 0;
   const WallsSensor *wallSensor;
   const BatteryMeter *batteryMeter;
@@ -26,9 +29,6 @@ class Algorithm2 : public AbstractAlgorithm,
 
   bool hasEnoughChargeToClean(int dockingDist);
 
-public:
-  ~Algorithm2() {};
-
   void setMaxSteps(size_t maxSteps);
 
   void setWallsSensor(const WallsSensor &);
@@ -37,7 +37,7 @@ public:
 
   void setBatteryMeter(const BatteryMeter &);
 
-  Step nextStep();
+  virtual Step nextStep() = 0;
 };
 
 #endif
